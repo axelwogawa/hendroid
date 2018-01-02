@@ -1,9 +1,11 @@
 const app = require('express')()
-const http = require('http').Server(app)
-const io = require('socket.io')(http)
+const http = require('http')
+const server = http.createServer(app)
+const WebSocket = require('ws')
+
+const wss = new WebSocket.Server({ server })
 
 let state = 'closed'
-let socket = null
 
 app.get('/', (req, res) => {
   res.send(`
@@ -12,20 +14,13 @@ app.get('/', (req, res) => {
       <p>Current state: ${state}</p>
       <button>Toggle</button>
     </form>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var io = io();
-      io.on('stateChange', function(state) {
-        console.log('new State!: ' + state);
-      });
-    </script>
   `)
 })
 
 app.post('/', (req, res) => {
   state = state === 'closed' ? 'open' : 'closed'
-  console.log('emitting stateChange to socket', socket === null)
-  io.emit('stateChange', state)
+  console.log('emitting stateChange to socket')
+  wss.broadcast('stateChange:' + state)
   res.redirect('/')
 })
 
@@ -35,14 +30,18 @@ app.get('/state', (req, res) => {
   })
 })
 
-io.on('connection', function(socket) {
+wss.on('connection', function connection(ws) {
   console.log('a user connected')
-
-  socket.on('disconnect', function() {
-    console.log('user disconnected')
-  })
 })
 
-http.listen(3010, function() {
-  console.log('listening on *:3010')
+wss.broadcast = function broadcast(data) {
+  wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data)
+    }
+  })
+}
+
+server.listen(3030, function() {
+  console.log('listening on *:3030')
 })
