@@ -1,3 +1,9 @@
+#In this file, output handling is done. The classes Flasher and
+# Flasher_handler are for making LEDs flash (as complicated as this because
+# threading is neccessary to not block all other operations while endless-
+# looping through on-off-procedure). The public methods further down actually
+# switch hardware outputs on or off.
+
 import pifacedigitalio as pfdio
 import time
 from threading import Thread
@@ -57,13 +63,16 @@ lgt_cl = pfd.output_pins[4]  #the led of the close button
 def open():
     rel_cl.turn_off()
     rel_op.turn_on()
-    light_opening()
     return
 
 def close():
     rel_op.turn_off()
     rel_cl.turn_on()
-    light_closing()
+    return
+
+def stop():
+    rel_op.turn_off()
+    rel_cl.turn_off()
     return
 
 def light_opened():
@@ -86,4 +95,10 @@ def light_opening():
 def light_closing():
     lgt_op.turn_off()
     flasher_handler.flash(lgt_cl)
+    return
+
+def light_off():
+    flasher_handler.stop()
+    lgt_op.turn_off()
+    lgt_cl.turn_off()
     return

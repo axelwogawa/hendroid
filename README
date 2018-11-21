@@ -1,0 +1,6 @@
+= usage
+execute "python3 client-raspi/init.py" to start local input-output handling (push buttons, flush LEDs, switch motor relays etc.)
+
+= deprecated
+client-raspi/io_handler.py
+client-raspi/io_handler_old.py
