@@ -1,26 +1,28 @@
-const app = require('express')()
+const express = require('express')
+const app = express()
 const http = require('http')
 const server = http.createServer(app)
 const WebSocket = require('ws')
 
-const wss = new WebSocket.Server({ server })
+app.use(express.urlencoded());
 
-let state = 'closed'
+const wss = new WebSocket.Server({ server })
+let state = "no idea";
 
 app.get('/', (req, res) => {
   res.send(`
     <h1>Welcome to hendroid!</h1>
     <form method="POST">
       <p>Current state: ${state}</p>
-      <button>Toggle</button>
+      <input type="submit" name="request" value="Öffnen">
+      <input type="submit" name="request" value="Schliessen">
     </form>
   `)
 })
 
 app.post('/', (req, res) => {
-  state = state === 'closed' ? 'open' : 'closed'
-  console.log('emitting stateChange to socket')
-  wss.broadcast('stateChange:' + state)
+  console.log('emitting stateChange to socket', req.body.request)
+  wss.broadcast('request:' + (req.body.request === "Öffnen" ? 'opening' : 'closing'))
   res.redirect('/')
 })
 
@@ -39,8 +41,15 @@ wss.broadcast = function broadcast(data) {
     if (client.readyState === WebSocket.OPEN) {
       client.send(data)
     }
+
+    client.onmessage = function(event) {
+      console.log("something happened!", event.data)
+      state = event.data
+    }
   })
 }
+
+
 
 server.listen(3030, function() {
   console.log('listening on *:3030')

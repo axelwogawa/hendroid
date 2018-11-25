@@ -9,9 +9,13 @@
 from threading import Timer
 import outputs
 
-
 class State_handler:
+    observers = []
     
+    def register_observer(self, callback):
+        print("registering observer")
+        self.observers.append(callback)
+        
     def __init__(self):
         self.states = {'closed', 'closing', 'opened', 'opening', 'intermediate'}
         self.state = 'intermediate'
@@ -28,6 +32,9 @@ class State_handler:
     
     def get_state(self):
         return self.state
+    
+    def get_states(self):
+        return self.states
 
 
     def change_state(self, new_state):
@@ -94,6 +101,8 @@ class State_handler:
                 outputs.light_off()
                 
             print("New state: " + self.state)
+            print("Calling " + str(len(self.observers)))
+            [ callback(self.state) for callback in self.observers ]
             
         else:
             print("No state change")
