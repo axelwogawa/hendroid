@@ -1,43 +1,20 @@
-import websocket
 import event_handler
-from init import init
 
-def on_message(ws, message):
-    print("new message")
-    data = message.split(":")
-    event = data[1]+ "_event"
-    if data[0] == "request":
-        print("server requested state change event: " + event)
-        event_handler.handle_event(event)
+from socketIO_client_nexus import SocketIO, LoggingNamespace
 
-def on_state_change(new_state):
-    print("state change triggered!")
-    ws.send(new_state)
+def start():
+    with SocketIO("hendroid.zosel.ch", 80, LoggingNamespace) as socketIO:
+    # with SocketIO("localhost", 3030, LoggingNamespace) as socketIO:
+        
+        def on_request(request):
+            print("new request: " + request)
+            event_handler.handle_event(request + "_event")
 
-def on_error(ws, error):
-    print(error)
+        def on_state_change(new_state):
+            print("state change triggered!" + new_state)
+            socketIO.emit('state changed', new_state)
 
+        event_handler.register_observer(on_state_change)
 
-def on_close(ws):
-    print("### closed ###")
-
-
-def on_open(ws):
-    print("### opened ###")
-
-
-# register hardware listeners
-init();
-
-event_handler.register_observer(on_state_change)
-
-websocket.enableTrace(True)
-ws = websocket.WebSocketApp(
-    "ws://hendroid.zosel.ch/",
-    #"ws://localhost:3030/",
-    on_message=on_message,
-    on_error=on_error,
-    on_close=on_close
-)
-ws.on_open = on_open
-ws.run_forever()
+        socketIO.on('request', on_request)
+        socketIO.wait()

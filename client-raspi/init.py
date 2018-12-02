@@ -4,6 +4,8 @@
 
 import pifacedigitalio as pfdio
 import event_handler
+from client import start
+
 
 #pin numbers of the inputs
 pnum_btn_op = 0  #the open button
@@ -25,22 +27,24 @@ def handle_input_event(event):
     print(str1)
     event_handler.handle_event(states[event.pin_num])
 
-def init():
-    pfd = pfdio.PiFaceDigital()
-    listener = pfdio.InputEventListener(chip=pfd)
+pfd = pfdio.PiFaceDigital()
+listener = pfdio.InputEventListener(chip=pfd)
 
-    #register input listeners
-    listener.register(pnum_btn_op, pfdio.IODIR_RISING_EDGE, handle_input_event)
-    listener.register(pnum_btn_cl, pfdio.IODIR_RISING_EDGE, handle_input_event)
-    listener.register(pnum_sns_op, pfdio.IODIR_FALLING_EDGE, handle_input_event)
-    listener.register(pnum_sns_cl, pfdio.IODIR_FALLING_EDGE, handle_input_event)
-    listener.activate()
+#register input listeners
+listener.register(pnum_btn_op, pfdio.IODIR_RISING_EDGE, handle_input_event)
+listener.register(pnum_btn_cl, pfdio.IODIR_RISING_EDGE, handle_input_event)
+listener.register(pnum_sns_op, pfdio.IODIR_FALLING_EDGE, handle_input_event)
+listener.register(pnum_sns_cl, pfdio.IODIR_FALLING_EDGE, handle_input_event)
+listener.activate()
 
-    #TODO: create output listeners to make state changes in case of trouble
-    # possible (e.g. state == opening and motor fails -> state will always remain
-    # opening. Must this be prevented?)
-    #TODO: create timing event to trigger opening or closing by time
-    #TODO: connect server input events
-    #TODO: notify server in case of state change
+#TODO: create output listeners to make state changes in case of trouble
+# possible (e.g. state == opening and motor fails -> state will always remain
+# opening. Must this be prevented?)
+#TODO: create timing event to trigger opening or closing by time
+#TODO: connect server input events
+#TODO: notify server in case of state change
 
-    print("hardware listeners registered")
+print("hardware listeners registered")
+
+#start socket
+start()
