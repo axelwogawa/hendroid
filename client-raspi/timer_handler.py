@@ -1,6 +1,9 @@
 #Here the open and close timers are handled.
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apschedulers.triggers import cron
+from datetime import datetime, time
+#import time
 
 class Timer_handler:
     open_time = property(get_open_time, set_open_time)
@@ -9,11 +12,23 @@ class Timer_handler:
     auto_close = property(get_auto_close, set_auto_close)
     
     def __init__(self):
-        self.scheduler = BackgroundScheduler()
-        self.open_time = "something"
-        self.close_time = "something else"
+        self.open_time = time(hour = 7, minute = 0)#time.strptime("7:00","%H:%M") #7:00am
+        self.close_time = time(hour = 18, minute = 30)#time.strptime("18:30","%H:%M") #6:30pm
         self.auto_open = False
         self.auto_close = False
+        #self.open_trigger = cron(hour = self.open_time.hour, minute = 0, second = 0)
+        #self.close_trigger = cron(hour = 18, minute = 30, second = 0)
+        self.scheduler = BackgroundScheduler()
+        self.open_job = scheduler.add_job(exec_motion
+                                          ,trigger="cron"
+                                          ,args=["opening"]
+                                          ,id="jopen"
+                                          ,name="open_job"
+                                          ,max_instances=1
+                                          ,replace_existing=True
+                                          ,hour = self.open_time.hour
+                                          ,minute = self.open_time.minute
+                                          )
     
     def get_auto_open(self):
         return self.auto_open

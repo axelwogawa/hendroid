@@ -33,8 +33,8 @@ event_handler.register_observer(on_state_change)
 
 websocket.enableTrace(True)
 ws = websocket.WebSocketApp(
-    #"ws://hendroid.zosel.ch/",
-    "ws://localhost:3030/",
+    "ws://hendroid.zosel.ch/",
+    #"ws://localhost:3030/",
     on_message=on_message,
     on_error=on_error,
     on_close=on_close
