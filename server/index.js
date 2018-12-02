@@ -16,21 +16,19 @@ app.get('/', (req, res) => {
         socket.on("state changed", function(state) {
           document.querySelector("#state").textContent = state
         })
+        function request(state) {
+          socket.emit("ui request", state)
+        }
     </script>
 
     <h1>Welcome to hendroid!</h1>
-    <form method="POST">
-      <p>Current state: <span id="state">${state}</span></p>
-      <input type="submit" name="request" value="Öffnen">
-      <input type="submit" name="request" value="Schliessen">
-    </form>
+    <p>Current state: <span id="state">${state}</span></p>
+    <button onclick="request('opening')">Öffnen</button>
+    <button onclick="request('closing')">Schließen</button>
   `)
 })
 
 app.post('/', (req, res) => {
-  console.log('emitting stateChange to socket', req.body.request)
-  io.emit('request', req.body.request === "Öffnen" ? 'opening' : 'closing')
-  res.redirect('/')
 })
 
 app.get('/state', (req, res) => {
@@ -39,13 +37,17 @@ app.get('/state', (req, res) => {
   })
 })
 
-
 io.on('connection', function connection(socket) {
   console.log('a user connected')
   socket.on('state changed', function(_state) {
     console.log("state changed:", _state)
     state = _state
     socket.broadcast.emit('state changed', _state)
+  })
+
+  socket.on('ui request', function(_state) {
+    console.log('emitting stateChange to socket', _state)
+    socket.broadcast.emit('request', _state)
   })
 })
 
