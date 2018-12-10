@@ -12,10 +12,10 @@ from threading import Thread
 class Flasher(Thread):
     flashing = False
     interval = 0.5 #seconds
-    lgt = None
+    lgts = None
     
-    def __init__(self, lgt):
-        self.lgt = lgt
+    def __init__(self, lgts):
+        self.lgts = lgts
         Thread.__init__(self)
         self.daemon = True
         self.start()
@@ -23,8 +23,9 @@ class Flasher(Thread):
     def run(self):
         self.flashing = True
         while self.flashing:
-            if not(self.lgt is None):
-                self.lgt.toggle()
+            if not(self.lgts is None):
+                for lgt in self.lgts:
+                    lgt.toggle()
             time.sleep(self.interval)
         return
     
@@ -36,10 +37,10 @@ class Flasher(Thread):
 class Flasher_handler:
     flasher = None
     
-    def flash(self, lgt):
+    def flash(self, lgts):
         if not(self.flasher is None):
            self.flasher.stop()
-        self.flasher = Flasher(lgt)
+        self.flasher = Flasher(lgts)
         return
     
     def stop(self):
@@ -88,13 +89,24 @@ def light_closed():
     return
 
 def light_opening():
+    flasher_handler.stop()
+    lgt_op.turn_off()
     lgt_cl.turn_off()
-    flasher_handler.flash(lgt_op)
+    flasher_handler.flash([lgt_op])
     return
 
 def light_closing():
+    flasher_handler.stop()
     lgt_op.turn_off()
-    flasher_handler.flash(lgt_cl)
+    lgt_cl.turn_off()
+    flasher_handler.flash([lgt_cl])
+    return
+
+def light_intermediate():
+    flasher_handler.stop()
+    lgt_op.turn_off()
+    lgt_cl.turn_off()
+    flasher_handler.flash([lgt_op, lgt_cl])
     return
 
 def light_off():

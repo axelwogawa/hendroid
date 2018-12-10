@@ -13,15 +13,19 @@ class State_handler:
     observers = []
     
     def register_observer(self, callback):
-        print("registering observer")
+        print("internal: registering state observer")
         self.observers.append(callback)
+        callback(self.state)
         
-    def __init__(self):
+    def __init__(self, state):
         self.states = {'closed', 'closing', 'opened', 'opening', 'intermediate'}
-        self.state = 'intermediate'
         self.motion_interval = 12.0     #time interval after which motor motion
                                         # will be stopped (in seconds)
         self.motion_timer = Timer(self.motion_interval, None)
+        self.boInit = True
+        self.set_state('')
+        self.change_state(state)
+        self.boInit = False
 
     def set_state(self, string):
         if(string in self.states):
@@ -41,7 +45,10 @@ class State_handler:
         success = False
         
         #check state transition plausibility
-        if(self.state == 'closed'):
+        if(self.boInit):
+            success = True
+            
+        elif(self.state == 'closed'):
             if(new_state == 'opening'):
                 success = True
                 
@@ -98,14 +105,14 @@ class State_handler:
                 outputs.light_closed()
             elif(self.state == "intermediate"):
                 outputs.stop()
-                outputs.light_off()
+                outputs.light_intermediate()
                 
-            print("New state: " + self.state)
-            print("Calling " + str(len(self.observers)))
+            print("internal: New state: " + self.state)
+            print("internal: Calling " + str(len(self.observers)) + " observers")
             [ callback(self.state) for callback in self.observers ]
             
         else:
-            print("No state change")
+            print("internal: No state change")
             
         return success
     
