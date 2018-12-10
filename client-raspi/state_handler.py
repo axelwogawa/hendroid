@@ -39,6 +39,12 @@ class State_handler:
     
     def get_states(self):
         return self.states
+    
+    def handle_event(self, event):
+        key = event.replace("_event", "")
+        print("internal: event key \"" + key + "\" extracted")
+        if(key in self.get_states()):
+            self.change_state(key)
 
 
     def change_state(self, new_state):

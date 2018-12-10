@@ -3,8 +3,10 @@
 # change. For states: see state_handler.py
 
 import pifacedigitalio as pfdio
-from event_handler import Event_handler
+#from event_handler import Event_handler
+from state_handler import State_handler
 from client import start
+from timer_handler import Timer_handler
 
 
 
@@ -13,7 +15,7 @@ from client import start
 def handle_input_event(event):
     str1 = "hardware: event detected at pin number " + str(event.pin_num)
     print(str1)
-    event_handler.handle_event(states[event.pin_num] + "_event")
+    state_handler.handle_event(states[event.pin_num] + "_event")
 
 
 ############################### constants ###################################
@@ -53,11 +55,13 @@ print("hardware listeners registered")
 
 #initialise internal state
 if(pfd.input_pins[pnum_sns_op].value):
-    event_handler = Event_handler(states[pnum_sns_op])
+    state_handler = State_handler(states[pnum_sns_op])
 elif(pfd.input_pins[pnum_sns_cl].value):
-    event_handler = Event_handler(states[pnum_sns_cl])
+    state_handler = State_handler(states[pnum_sns_cl])
 else:
-    event_handler = Event_handler(states[404])
+    state_handler = State_handler(states[404])
+
+timer_handler = Timer_handler(state_handler)
 
 #start nodejs socket
-start(event_handler)
+start(state_handler, timer_handler)

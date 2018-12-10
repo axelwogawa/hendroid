@@ -11,5 +11,5 @@ class Event_handler:
         if(key in self.state_handler.get_states()):
             self.state_handler.change_state(key)
             
-    def register_observer(self, callback):
+    def register_state_observer(self, callback):
         self.state_handler.register_observer(callback)
