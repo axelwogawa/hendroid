@@ -83,6 +83,9 @@ class Timer_handler:
                 self.scheduler.resume()
             self.save_state()
     
+#    def set_auto_open(self, value):
+#        self.auto_open = value
+    
     @auto_close.setter
     def auto_close(self, value):
         if self.auto_close == None or value != self.auto_close:
@@ -97,6 +100,9 @@ class Timer_handler:
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
+            
+#    def set_auto_close(self, value):
+#        self.auto_close = value
     
     @open_time.setter
     def open_time(self, value):
@@ -143,20 +149,22 @@ class Timer_handler:
     
     ############################## other methods ##############################
     def exec_motion(self, arg):
-        print("internal: timing event - " + arg)
+        print("internal: scheduled event (" + datetime.now().isoformat(' ')
+              + ") - " + arg)
         self.state_handler.handle_event(arg + "_event")
     
     def save_state(self):
         if(self.boInit == False):
             try:
-                with open(os.environ['HOME'] + "/hendroid/client-raspi/timer_data.pkl", "wb") as output:
+                with open(os.environ['HOME'] + "/hendroid/client-raspi/"
+                          + "timer_data.pkl", "wb") as output:
                     pickle.dump(self.open_time, output)
                     pickle.dump(self.close_time, output)
                     pickle.dump(self.auto_open, output)
                     pickle.dump(self.auto_close, output)
-                    print("internal: successfully saved timer settings to file")
+                    print("internal: successfully saved timer setting to file")
             except Exception as e:
-                print("internal error: timer setiings write to file: " + str(e))
+                print("internal error: write timer setting to file: " + str(e))
     
     #TODO:
     #scheduler.shutdown()

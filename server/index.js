@@ -16,15 +16,26 @@ app.get('/', (req, res) => {
         socket.on("state changed", function(state) {
           document.querySelector("#state").textContent = state
         })
-        function request(state) {
-          socket.emit("ui request", state)
+        function motion_request(state) {
+          socket.emit("ui motion request", state)
+        }
+        function timer_request(elem, cat, subcat) {
+          if (cat === "auto")
+            socket.emit("ui timer request", cat.concat(":", subcat ,":", elem.value.toString()))
         }
     </script>
 
-    <h1>Welcome to hendroid!</h1>
+    <h1>Hendroid</h1>
+    <h2>Die automatische Hühnerklappe</h2>
     <p>Current state: <span id="state">${state}</span></p>
-    <button onclick="request('opening')">Öffnen</button>
-    <button onclick="request('closing')">Schließen</button>
+    <button onclick="motion_request('opening')">Öffnen</button>
+    <button onclick="motion_request('closing')">Schließen</button>
+    <br>
+    <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
+    <input type="time" id="time_open" onBlur="timer_request(this, 'time', 'open')">
+    <br>
+    <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
+    <input type="time" id="time_close" onClick="timer_request(this, 'time', 'close')">
   `)
 })
 
@@ -45,9 +56,14 @@ io.on('connection', function connection(socket) {
     socket.broadcast.emit('state changed', _state)
   })
 
-  socket.on('ui request', function(_state) {
+  socket.on('ui motion request', function(_state) {
     console.log('emitting stateChange to socket', _state)
-    socket.broadcast.emit('request', _state)
+    socket.broadcast.emit('motion request', _state)
+  })
+
+  socket.on('ui timer request', function(_request) {
+    console.log('emitting timer setting to socket', _request)
+    socket.broadcast.emit('set timer request', _request)
   })
 })
 

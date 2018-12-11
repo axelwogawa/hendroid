@@ -51,7 +51,7 @@ listener.activate()
 # opening. Must this be prevented?)
 #TODO: create timing event to trigger opening or closing by time
 
-print("hardware listeners registered")
+print("internal: hardware listeners registered")
 
 #initialise internal state
 if(pfd.input_pins[pnum_sns_op].value):
