@@ -21,7 +21,23 @@ app.get('/', (req, res) => {
         }
         function timer_request(elem, cat, subcat) {
           if (cat === "auto")
-            socket.emit("ui timer request", cat.concat(":", subcat ,":", elem.value.toString()))
+            socket.emit("ui timer request", cat + "-" + subcat + "-" + elem.checked.toString())
+          else if (cat === "time") {
+          	let id_h = "time_" + subcat + "_h"
+          	let id_m = "time_" + subcat + "_m"
+            let time = document.getElementById(id_h).value.toString()
+            time = time + ":" + document.getElementById(id_m).value.toString()
+          	socket.emit("ui timer request", cat + "-" + subcat + "-" + time)
+          }
+        }
+        function set_style_unconfirmed(elem) {
+          elem.style.backgroundColor = "grey"
+        }
+        function validate_value(elem) {
+          if(elem.value > elem.max)
+            elem.value = elem.max
+          else if(elem.value < elem.min)
+            elem.value = elem.min
         }
     </script>
 
@@ -32,10 +48,17 @@ app.get('/', (req, res) => {
     <button onclick="motion_request('closing')">Schließen</button>
     <br>
     <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
-    <input type="time" id="time_open" onBlur="timer_request(this, 'time', 'open')">
-    <br>
+    <div>
+      <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="set_style_unconfirmed(this)" onBlur="validate_value(this)">:
+      <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="set_style_unconfirmed(this)" onBlur="validate_value(this)">Uhr
+      <button onClick="timer_request(this, 'time', 'open')">Uhrzeit übernehmen</button>
+    </div>
     <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
-    <input type="time" id="time_close" onClick="timer_request(this, 'time', 'close')">
+    <div>
+      <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="set_style_unconfirmed(this)" onBlur="validate_value(this)">:
+      <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="set_style_unconfirmed(this)" onBlur="validate_value(this)">Uhr
+      <button onClick="timer_request(this, 'time', 'close')">Uhrzeit übernehmen</button>
+    </div>
   `)
 })
 
