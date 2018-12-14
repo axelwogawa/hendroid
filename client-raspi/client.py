@@ -1,6 +1,6 @@
 #import event_handler
 import state_handler
-from datetime import datetime
+from datetime import datetime, time
 
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
@@ -19,24 +19,29 @@ def start(state_handler, timer_handler):
         
         #careful, very much python in here!
         def auto_open(val):
-            timer_handler.auto_open = val.lower() == "on"
+            timer_handler.auto_open = val.lower() == "true"
         def auto_close(val):
-            timer_handler.auto_close = val.lower() == "on"
-        def time_open(val):
-            ;#timer_handler.open_time =;
-        def time_close(val):
-            ;#timer_handler.open_time = 
-        timer_values = {"auto": {"open": auto_open
+            timer_handler.auto_close = val.lower() == "true"
+        timer_actions = {"auto": {"open": auto_open
                                   ,"close": auto_close
-                                 }
-                        "time": {"open": time_open
+                                  }
+                         "time": {"open": time_open
                                   ,"close": time_close
-                                 }
+                                  }
                          }
+        def time_open(val):
+            val_contents = val.split(":")
+            timer_handler.open_time = time(hour=val_contents[0]
+                                           ,minute=val_contents[1])
+        def time_close(val):
+            val_contents = val.split(":")
+            timer_handler.close_time = time(hour=val_contents[0]
+                                            ,minute=val_contents[1])
+       
         def on_timer_request(request):
             print("client: new request: " + request)
-            req_contents = request.split(":")
-            timer_values[req_contents[0]][req_contents[1]](req_contents[2])
+            req_contents = request.split("-")
+            timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
 
         state_handler.register_observer(on_state_change)
 
