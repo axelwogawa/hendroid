@@ -1,4 +1,14 @@
-#Here the open and close timers are handled.
+#In here, the Timer_handler class is defined.
+# In it the open and close timers are handled by a cron job which again is
+# handled by BackgroundScheduler module. For automatically opening and closing
+# the door each at a given time, two BackgroundScheduler jobs are created. By
+# setting Timer_handler's auto_-properties to True or False, automatic opening
+# or closing, resp., can be switched on or off. By setting Timer_handler's
+# _time-properties, the according times can be set. Changing one of these
+# settings affects the according scheduler job to be changed accordingly. All
+# settings are saved to a binary file by python's Pickle module. this is done
+# at each value change. On Timer_handler class instanciation, these values are
+# read back from the file into the object.
 
 from apscheduler.schedulers.background import BackgroundScheduler
 #from apschedulers.triggers import cron
@@ -51,6 +61,9 @@ class Timer_handler:
     
     
     ########################### property definition ###########################
+    #Attrinutes are defined as properties as changing them requires some effort
+    # (i.e. changing the Scheduler settings accordingly) rather than changing
+    # them directly.
     @property
     def open_time(self):
         return self._open_time
@@ -67,8 +80,6 @@ class Timer_handler:
     def auto_close(self):
         return self._auto_close
     
-    
-    ######################### property getters and setters ####################
     @auto_open.setter
     def auto_open(self, value):
         if (isinstance(value, bool) 
@@ -166,15 +177,24 @@ class Timer_handler:
         self.observers.append(callback)
         self.update_observer(callback)
         
+    #Update all observers of the object, i.e. notify them about values
+    # of all properties of the object.
     def update_all_observers(self):
         [ self.update_observer(callback) for callback in self.observers ]
         
+    #Update observer defined by callback parameter, i.e. notify it about values
+    # of all properties of the object.
     def update_observer(self, callback):       
         self.notify_observers("auto-open", [callback])
         self.notify_observers("auto-close", [callback])
         self.notify_observers("time-open", [callback])
         self.notify_observers("time-close", [callback])
         
+    # notify given observers about changes encoded in update parameter
+    # update parameter must have the form: "<cat>-<subcat>" with
+    # cat in {"auto", "time"} and subcat in {"open", "close"}.
+    # If observers parameter is omittet, then all registered observers of the
+    # object are notified.
     def notify_observers(self, update, observers=None):
         if(self.boInit == False):
             update_vals = {"time-open":   [self.open_time.hour
@@ -211,7 +231,5 @@ class Timer_handler:
             except Exception as e:
                 print("internal error: write timer setting to file: " + str(e))
     
-    #TODO:
-    #scheduler.shutdown()
-    #connect timer_handler to event_handler
-    #connect timing events to client
+    def __del__(self):
+        self.scheduler.shutdown()
