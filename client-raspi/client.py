@@ -23,9 +23,9 @@ def start(state_handler, timer_handler):
         def auto_close(val):
             timer_handler.auto_close = val.lower() == "on"
         def time_open(val):
-            #timer_handler.open_time =
+            ;#timer_handler.open_time =;
         def time_close(val):
-            #timer_handler.open_time = 
+            ;#timer_handler.open_time = 
         timer_values = {"auto": {"open": auto_open
                                   ,"close": auto_close
                                  }
