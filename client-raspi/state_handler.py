@@ -17,6 +17,10 @@ class State_handler:
         self.observers.append(callback)
         callback(self.state)
         
+    def update_all_observers(self):
+        print("internal: Calling " + str(len(self.observers)) + " state observers")
+        [ callback(self.state) for callback in self.observers ]
+        
     def __init__(self, state):
         self.states = {'closed', 'closing', 'opened', 'opening', 'intermediate'}
         self.motion_interval = 12.0     #time interval after which motor motion
@@ -114,8 +118,7 @@ class State_handler:
                 outputs.light_intermediate()
                 
             print("internal: New state: " + self.state)
-            print("internal: Calling " + str(len(self.observers)) + " observers")
-            [ callback(self.state) for callback in self.observers ]
+            self.update_all_observers()
             
         else:
             print("internal: No state change")

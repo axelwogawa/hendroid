@@ -18,6 +18,7 @@ class Timer_handler:
         
         self.state_handler = state_handler
         self.scheduler = BackgroundScheduler()
+        self.observers = []
         #read most recent settings saved to file, if available
         try:
             with open(os.environ['HOME'] + "/hendroid/client-raspi/timer_data.pkl", "rb") as input:
@@ -70,7 +71,9 @@ class Timer_handler:
     ######################### property getters and setters ####################
     @auto_open.setter
     def auto_open(self, value):
-        if self.auto_open == None or value != self.auto_open:
+        if (isinstance(value, bool) 
+            and value != None
+            and (self.auto_open == None or value != self.auto_open)):
             self._auto_open = value
             if(self.scheduler.running):
                 self.scheduler.pause()
@@ -82,13 +85,16 @@ class Timer_handler:
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
+            self.notify_observers("auto-open")
     
 #    def set_auto_open(self, value):
 #        self.auto_open = value
     
     @auto_close.setter
     def auto_close(self, value):
-        if self.auto_close == None or value != self.auto_close:
+        if (isinstance(value, bool) 
+            and value != None
+            and (self.auto_close == None or value != self.auto_close)):
             self._auto_close = value
             if(self.scheduler.running):
                 self.scheduler.pause()
@@ -100,13 +106,16 @@ class Timer_handler:
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
+            self.notify_observers("auto-close")
             
 #    def set_auto_close(self, value):
 #        self.auto_close = value
     
     @open_time.setter
     def open_time(self, value):
-        if self.open_time == None or value != self.open_time:
+        if (isinstance(value, time) 
+            and value != None
+            and (self.open_time == None or value != self.open_time)):
             self._open_time = value
             if(self.scheduler.running):
                 self.scheduler.pause()
@@ -124,10 +133,13 @@ class Timer_handler:
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
+            self.notify_observers("time-open")
             
     @close_time.setter
     def close_time(self, value):
-        if self.close_time == None or value != self.close_time:
+        if (isinstance(value, time) 
+            and value != None
+            and (self.close_time == None or value != self.close_time)):
             self._close_time = value
             if(self.scheduler.running):
                 self.scheduler.pause()
@@ -145,9 +157,42 @@ class Timer_handler:
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
+            self.notify_observers("time-close")
     
     
     ############################## other methods ##############################
+    def register_observer(self, callback):
+        print("internal: registering timer observer")
+        self.observers.append(callback)
+        self.update_observer(callback)
+        
+    def update_all_observers(self):
+        [ self.update_observer(callback) for callback in self.observers ]
+        
+    def update_observer(self, callback):       
+        self.notify_observers("auto-open", [callback])
+        self.notify_observers("auto-close", [callback])
+        self.notify_observers("time-open", [callback])
+        self.notify_observers("time-close", [callback])
+        
+    def notify_observers(self, update, observers=None):
+        if(self.boInit == False):
+            update_vals = {"time-open":   [self.open_time.hour
+                                          ,self.open_time.minute]
+                           ,"time-close": [self.close_time.hour
+                                          ,self.close_time.minute]
+                           ,"auto-close": [self.auto_close]
+                           ,"auto-open":  [self.auto_open]
+                           }
+            val_str = ""
+            for val in update_vals[update]:
+                val_str = val_str + ":" + str(val) 
+            update = update + "-" + val_str[1:]
+            if(observers == None):
+                observers = self.observers
+            print("internal: Calling " + str(len(observers)) + " timer observers")
+            [ callback(update) for callback in observers ]
+        
     def exec_motion(self, arg):
         print("internal: scheduled event (" + datetime.now().isoformat(' ')
               + ") - " + arg)

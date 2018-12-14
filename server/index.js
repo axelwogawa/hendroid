@@ -7,15 +7,9 @@ const io = require('socket.io')(server)
 app.use(express.urlencoded())
 
 let state = "no_idea"
-const state_strs = {
-	opened: 			"ist geöffnet"
-	,closed: 			"ist geschlossen"
-	,opening:			"öffnet sich"
-	,closing:			"schließt sich"
-	,intermediate:"steht halb geöffnet"
-	,no_idea:			"weiß nicht so recht"
-}
-
+/*'/' is the content of the initial GET request of a web browser calling the 
+root document of a website (i.e. empty GET request)???????????????????????
+-> answer by delivering website content*/
 app.get('/', (req, res) => {
 	/*res.sendFile('index.html', {root: __dirname })
 	res.sendFile('huehner_.png', {root: __dirname })})*/
@@ -23,9 +17,20 @@ app.get('/', (req, res) => {
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io()
+
+        const state_strs = {
+	                    opened:       "ist geöffnet"
+	                    ,closed:      "ist geschlossen"
+	                    ,opening:     "öffnet sich"
+	                    ,closing:     "schließt sich"
+	                    ,intermediate:"steht halb geöffnet"
+	                    ,no_idea:     "weiß nicht so recht"
+                            }
+
+        socket.emit("ui initial request")/*request full Pi state after website load/reload*/
         
         socket.on("state changed", function(state) {
-          document.querySelector("#state").textContent = state
+          document.querySelector("#state").textContent = state_strs[state]
         })
         
         socket.on('timer update', function(update) {
@@ -38,15 +43,15 @@ app.get('/', (req, res) => {
             elems[0] = document.getElementById(id_)
             elems[0].checked = active
             if (active)
-            	set_style_active(elem[0])
+              set_style_active(elems[0])
             else
-              set_style_inactive(elem[0])
+              set_style_inactive(elems[0])
           }
           else if (update_cont[0] === "time") {
-          	let id_h = "time_" + update_cont[1] + "_h"
-          	let id_m = "time_" + update_cont[1] + "_m"
-          	elems[0] = document.getElementById(id_h)
-          	elems[1] = document.getElementById(id_m)
+            let id_h = "time_" + update_cont[1] + "_h"
+            let id_m = "time_" + update_cont[1] + "_m"
+            elems[0] = document.getElementById(id_h)
+            elems[1] = document.getElementById(id_m)
             let time = update_cont[2].split(':')
             elems[0].value = parseInt(time[0])
             elems[1].value = parseInt(time[1])
@@ -100,7 +105,7 @@ app.get('/', (req, res) => {
     <h2>Die automatische Hühnerklappe</h2>
     <div style="border: 5px solid midnightblue">
       <h3>Steuern</h3>
-      <p>Klappe <span id="state">${state_strs[state]}</span></p>
+      <p>Klappe <span id="state"></span></p>
     	<button onclick="motion_request('opening')">Öffnen</button>
     	<button onclick="motion_request('closing')">Schließen</button>
     </div>
@@ -142,6 +147,11 @@ io.on('connection', function connection(socket) {
   socket.on('timer update', function(_update) {
     console.log("timer update: ", _update)
     socket.broadcast.emit('timer update', _update)
+  })
+
+  socket.on('ui initial request', function() {
+    console.log('New user is a UI client')
+    socket.broadcast.emit('full state request')
   })
 
   socket.on('ui motion request', function(_state) {
