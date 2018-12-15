@@ -1,0 +1,45 @@
+html, body 	{
+        height: 100%;
+        text-align: center;
+}
+
+html	{
+        display: table;
+        margin: auto;
+}
+
+body 	{
+        background-image: url("huehner_.png");
+        background-repeat: no-repeat;
+        background-color: mediumspringgreen;
+        background-position: center;
+        background-size: cover;/*100%;*/
+        display: table-cell;
+        font-family: Atma, Arial, Helvetica, sans-serif;
+        font-size: x-large;
+        font-weight: bold;
+
+}  
+
+h1 	{
+        font-family: Bungee Shade, Arial Black, Helvetica, sans-serif;
+        color: darkslateblue;/*steelblue;*/
+        margin: 0.2em auto 0.2em auto;
+}
+
+h2 	{
+        font-family: Bungee Hairline, Arial, Helvetica, sans-serif;
+        color: darkslateblue;/*mediumaquamarine;seagreen;*/
+        font-style: italic;
+        margin: 0 auto auto auto;
+}
+
+h3 	{
+        font-family: Bungee, Arial Black, Helvetica, sans-serif;
+        color: darkslateblue;/*steelblue;*/
+}
+
+h4 	{
+        font-family: Bungee, Arial Black, Helvetica, sans-serif;
+        color: blue;/*steelblue;*/
+}

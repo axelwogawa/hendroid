@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>hendroid</title>
+  <link href='https://fonts.googleapis.com/css?family=Atma' rel='stylesheet'>
+  <link href='https://fonts.googleapis.com/css?family=Bungee Shade' rel='stylesheet'>
+  <link href='https://fonts.googleapis.com/css?family=Bungee' rel='stylesheet'>
+  <link href='https://fonts.googleapis.com/css?family=Bungee Hairline' rel='stylesheet'>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="ui-client.js"></script>
+</head>
+<body>
+    <h1>Hendroid</h1>
+    <h2>Die automatische Hühnerklappe</h2>
+    <div style="border: 5px solid midnightblue">
+      <h3>Steuern</h3>
+      <p>Klappe <span id="state"></span></p>
+    	<button onclick="motion_request('opening')">Öffnen</button>
+    	<button onclick="motion_request('closing')">Schließen</button>
+    </div>
+    <div style="margin: 1em auto 1em auto">
+      <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
+      <br>
+      <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
+      <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+      <button onClick="timer_request(this, 'time', 'open')">Uhrzeit übernehmen</button>
+    </div>
+    <div style="border: 1px solid grey; margin: 1em 5em 1em 5em"> </div>
+    <div style="margin: 1em auto 1em auto">
+      <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
+      <br>
+      <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
+      <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+      <button onClick="timer_request(this, 'time', 'close')">Uhrzeit übernehmen</button>
+    </div>
+</body>
+</html>
