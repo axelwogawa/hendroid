@@ -69,12 +69,16 @@ def start(state_handler, timer_handler):
             timer_handler.update_all_observers()
 
         ############################## init routine ###########################
-        state_handler.register_observer(on_state_change)
-        timer_handler.register_observer(on_timer_change)
-        
-        socketIO.on('motion request', on_motion_request)
-        socketIO.on('set timer request', on_timer_request)
-        socketIO.on('full state request', on_full_request)
-        socketIO.wait()
-        print("client: socket stopped waiting forever o.O ("
-              + datetime.now().isoformat(' ') + ")")
+        try:
+            state_handler.register_observer(on_state_change)
+            timer_handler.register_observer(on_timer_change)
+
+            socketIO.on('motion request', on_motion_request)
+            socketIO.on('set timer request', on_timer_request)
+            socketIO.on('full state request', on_full_request)
+            socketIO.wait()
+            print("client: socket stopped waiting forever o.O ("
+                  + datetime.now().isoformat(' ') + ")")
+        except ConnectionError as e:
+            print('The server is down. Try again later.')
+            print(e)

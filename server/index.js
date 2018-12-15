@@ -137,7 +137,7 @@ app.get('/state', (req, res) => {
 })
 
 io.on('connection', function connection(socket) {
-  console.log('a user connected')
+  console.log('a user connected', socket.id)
   socket.on('state changed', function(_state) {
     console.log("state changed: ", _state)
     state = _state
@@ -150,7 +150,7 @@ io.on('connection', function connection(socket) {
   })
 
   socket.on('ui initial request', function() {
-    console.log('New user is a UI client')
+    console.log('New user is a UI client', socket.id)
     socket.broadcast.emit('full state request')
   })
 
@@ -162,6 +162,9 @@ io.on('connection', function connection(socket) {
   socket.on('ui timer request', function(_request) {
     console.log('emitting timer setting to socket', _request)
     socket.broadcast.emit('set timer request', _request)
+  })
+  socket.on('disconnect', function() {
+    console.log('user disconnected', socket.id)
   })
 })
 
