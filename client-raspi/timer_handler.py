@@ -18,6 +18,7 @@ import pickle
 import os
 
 class Timer_handler:
+    settings_file = "/home/pi/hendroid/client-raspi/timer_data.pkl"
     ############################### constructor ###############################
     def __init__(self, state_handler):
         self.boInit = True
@@ -31,7 +32,8 @@ class Timer_handler:
         self.observers = []
         #read most recent settings saved to file, if available
         try:
-            with open(os.environ['HOME'] + "/hendroid/client-raspi/timer_data.pkl", "rb") as input:
+            #with open(os.environ['HOME'] + "/hendroid/client-raspi/timer_data.pkl", "rb") as input:
+            with open(self.settings_file, "rb") as input:
                 self.open_time = pickle.load(input)
                 print("internal: read <open_time> from file: "
                       + str(self.open_time))
@@ -221,8 +223,9 @@ class Timer_handler:
     def save_state(self):
         if(self.boInit == False):
             try:
-                with open(os.environ['HOME'] + "/hendroid/client-raspi/"
-                          + "timer_data.pkl", "wb") as output:
+                #with open(os.environ['HOME'] + "/hendroid/client-raspi/"
+                 #         + "timer_data.pkl", "wb") as output:
+                with open(self.settings_file, "wb") as output:
                     pickle.dump(self.open_time, output)
                     pickle.dump(self.close_time, output)
                     pickle.dump(self.auto_open, output)
