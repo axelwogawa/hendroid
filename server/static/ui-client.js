@@ -68,11 +68,11 @@ function set_style_confirmed(elem) {
 }
 
 function set_style_active(elem) {
-	elem.parentElement.style.backgroundColor = "yellow"
+	elem.parentElement.style.backgroundColor = "rgba(255, 255, 0, 0.7)"//"yellow"
 }
 
 function set_style_inactive(elem) {
-	elem.parentElement.style.backgroundColor = "silver"
+	elem.parentElement.style.backgroundColor = "rgba(192, 192, 192, 0.7)"//"silver"
 }
 
 function validate_value(elem) {

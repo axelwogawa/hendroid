@@ -5,3 +5,7 @@ __pycache__/
 *log
 *.pkl
 package*.json
+*.png
+*.jpeg
+*.jpg
+*.ico
