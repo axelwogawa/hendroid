@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+      "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en-US">
+<head profile="http://www.w3.org/2005/10/profile">
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>hendroid</title>
   <link href='https://fonts.googleapis.com/css?family=Atma' rel='stylesheet'>
@@ -8,32 +9,39 @@
   <link href='https://fonts.googleapis.com/css?family=Bungee' rel='stylesheet'>
   <link href='https://fonts.googleapis.com/css?family=Bungee Hairline' rel='stylesheet'>
   <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="apple-touch-icon" sizes="180x180" href="/henne_sq_180x180.png">
+  <link rel="icon" type="image/png" href="/henne_sq_32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/henne_sq_16x16.png" sizes="16x16">
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" /> 
   <script src="/socket.io/socket.io.js"></script>
   <script src="ui-client.js"></script>
 </head>
 <body>
     <h1>Hendroid</h1>
     <h2>Die automatische Hühnerklappe</h2>
-    <div style="border: 5px solid midnightblue">
+    <div style="border: 5px solid midnightblue; margin: 0.5em auto 0.5em auto">
       <h3>Steuern</h3>
       <p>Klappe <span id="state"></span></p>
     	<button onclick="motion_request('opening')">Öffnen</button>
     	<button onclick="motion_request('closing')">Schließen</button>
     </div>
-    <div style="margin: 1em auto 1em auto">
-      <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
-      <br>
-      <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
-      <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
-      <button onClick="timer_request(this, 'time', 'open')">Uhrzeit übernehmen</button>
-    </div>
-    <div style="border: 1px solid grey; margin: 1em 5em 1em 5em"> </div>
-    <div style="margin: 1em auto 1em auto">
-      <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
-      <br>
-      <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
-      <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
-      <button onClick="timer_request(this, 'time', 'close')">Uhrzeit übernehmen</button>
+    <div style="border: 5px solid midnightblue; margin: 0.5em auto 0.5em auto">
+      <h3>Automatik einstellen</h3>
+      <div style="margin: 0.5em auto 0.5em auto">
+        <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
+        <br>
+        <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
+        <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+        <button onClick="timer_request(this, 'time', 'open')">Uhrzeit übernehmen</button>
+      </div>
+      <div style="border-bottom: 1px solid grey; margin: 0.5em 5em 0.5em 5em"> </div>
+      <div style="margin: 1em auto 1em auto">
+        <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
+        <br>
+        <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
+        <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+        <button onClick="timer_request(this, 'time', 'close')">Uhrzeit übernehmen</button>
+      </div>
     </div>
 </body>
 </html>
