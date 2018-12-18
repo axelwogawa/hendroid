@@ -11,16 +11,14 @@
 # read back from the file into the object.
 
 from apscheduler.schedulers.background import BackgroundScheduler
-#from apschedulers.triggers import cron
 from datetime import datetime, time
-#import time
 import pickle
 import os
 
 class Timer_handler:
     settings_file = "/home/pi/hendroid/client-raspi/timer_data.pkl"
     ############################### constructor ###############################
-    def __init__(self, state_handler):
+    def __init__(self, state_handler, logger):
         self.boInit = True
         self._open_time = None
         self._close_time = None
@@ -30,35 +28,44 @@ class Timer_handler:
         self.state_handler = state_handler
         self.scheduler = BackgroundScheduler()
         self.observers = []
+        self.log = logger
         #read most recent settings saved to file, if available
         try:
-            #with open(os.environ['HOME'] + "/hendroid/client-raspi/timer_data.pkl", "rb") as input:
+            #with open(os.environ['HOME'] + 
+            #"/hendroid/client-raspi/timer_data.pkl", "rb") as input:
             with open(self.settings_file, "rb") as input:
                 self.open_time = pickle.load(input)
                 print("internal: read <open_time> from file: "
                       + str(self.open_time))
+                self.log.info("internal: read <open_time> from file: "
+                      + str(self.open_time))
                 self.close_time = pickle.load(input)
                 print("internal: read <close_time> from file: "
+                      + str(self.close_time))
+                self.log.info("internal: read <close_time> from file: "
                       + str(self.close_time))
                 self.auto_open = pickle.load(input)
                 print("internal: read <auto_open> from file: "
                       + str(self.auto_open))
+                self.log.info("internal: read <auto_open> from file: "
+                      + str(self.auto_open))
                 self.auto_close = pickle.load(input)
                 print("internal: read <auto_close> from file: "
                       + str(self.auto_close))
+                self.log.info("internal: read <auto_close> from file: "
+                      + str(self.auto_close)
                 self.boInit = False
         except Exception as e:
             print("internal error: timer state read from file: " + str(e))
+            self.log.error("internal error: timer state read from file: ", 
+                            exc_info=True)
             self.open_time = time(hour = 7, minute = 0)
-            #time.strptime("7:00","%H:%M") #7:00am
             self.close_time = time(hour = 18, minute = 30)
-            #time.strptime("18:30","%H:%M") #6:30pm
             self.auto_open = False
             self.boInit = False
             self.auto_close = False
             print("internal: set timer to default settings")
-        #self.open_trigger = cron(hour = self.open_time.hour, minute = 0, second = 0)
-        #self.close_trigger = cron(hour = 18, minute = 30, second = 0)
+            self.log.info("internal: set timer to default settings")
         self.scheduler.start()
     
     
@@ -95,13 +102,11 @@ class Timer_handler:
             else:
                 self.scheduler.pause_job(job_id=self.open_job.id)
             print("internal: set <auto_open> to " + str(self.auto_open))
+            self.log.info("internal: set <auto_open> to " + str(self.auto_open))
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
             self.notify_observers("auto-open")
-    
-#    def set_auto_open(self, value):
-#        self.auto_open = value
     
     @auto_close.setter
     def auto_close(self, value):
@@ -116,14 +121,13 @@ class Timer_handler:
             else:
                 self.scheduler.pause_job(job_id=self.close_job.id)
             print("internal: set <auto_close> to " + str(self.auto_close))
+            self.log.info("internal: set <auto_close> to " + 
+                            str(self.auto_close))
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
             self.notify_observers("auto-close")
             
-#    def set_auto_close(self, value):
-#        self.auto_close = value
-    
     @open_time.setter
     def open_time(self, value):
         if (isinstance(value, time) 
@@ -143,6 +147,7 @@ class Timer_handler:
                                                   ,minute = self.open_time.minute
                                                   )
             print("internal: set <open_time> to " + str(self.open_time))
+            self.log.info("internal: set <open_time> to " + str(self.open_time))
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
@@ -167,6 +172,8 @@ class Timer_handler:
                                                     ,minute = self.close_time.minute
                                                     )
             print("internal: set <close_time> to " + str(self.close_time))
+            self.log.info("internal: set <close_time> to " + 
+                            str(self.close_time))
             if(self.scheduler.running):
                 self.scheduler.resume()
             self.save_state()
@@ -176,6 +183,7 @@ class Timer_handler:
     ############################## other methods ##############################
     def register_observer(self, callback):
         print("internal: registering timer observer")
+        self.log.info("internal: registering timer observer")
         self.observers.append(callback)
         self.update_observer(callback)
         
@@ -213,11 +221,14 @@ class Timer_handler:
             if(observers == None):
                 observers = self.observers
             print("internal: Calling " + str(len(observers)) + " timer observers")
+            self.log.info("internal: Calling " + str(len(observers)) + 
+                            " timer observers")
             [ callback(update) for callback in observers ]
         
     def exec_motion(self, arg):
         print("internal: scheduled event (" + datetime.now().isoformat(' ')
               + ") - " + arg)
+        self.log("internal: scheduled event - " + arg)
         self.state_handler.handle_event(arg + "_event")
     
     def save_state(self):
@@ -231,8 +242,12 @@ class Timer_handler:
                     pickle.dump(self.auto_open, output)
                     pickle.dump(self.auto_close, output)
                     print("internal: successfully saved timer setting to file")
+                    self.log.info("internal: successfully saved timer setting" +
+                                    " to file")
             except Exception as e:
                 print("internal error: write timer setting to file: " + str(e))
+                self.log.error("internal error: write timer setting to file: ",
+                                exec_info=True)
     
     def __del__(self):
         self.scheduler.shutdown()

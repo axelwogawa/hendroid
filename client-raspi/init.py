@@ -7,15 +7,8 @@ import pifacedigitalio as pfdio
 from state_handler import State_handler
 from client import start
 from timer_handler import Timer_handler
-
-
-
-############################ callback functions ##############################
-#pass event string over to event handler
-def handle_input_event(event):
-    str1 = "hardware: event detected at pin number " + str(event.pin_num)
-    print(str1)
-    state_handler.handle_event(states[event.pin_num] + "_event")
+from threading import Timer
+import logging
 
 
 ############################### constants ###################################
@@ -35,8 +28,43 @@ states =    {pnum_btn_op: "opening"
             }
 
 
-############################### init procedure ##############################
+################################## logging #####################################
+logger = logging.getLogger("hendroid")
+formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
+stderr_handler = logging.StreamHandler()
+stderr_handler.setFormatter(formatter)
+logger.addHandler(stderr_handler)
+file_handler = loging.FileHandler(filename="hendroid.log")
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+logger.setLevel(logging.DEBUG))
+
+
+################################# HW handler ###################################
 pfd = pfdio.PiFaceDigital()
+
+
+############################ callback functions ##############################
+#pass event string over to event handler
+def handle_input_event(event):
+    print("hardware: event detected at pin number " + str(event.pin_num))
+    logger.info("hardware: event detected at pin number " + str(event.pin_num))
+    print(event)
+    #wait if input state persists for at least 500ms, otherwise dismiss event
+    unbounce_timer = Timer( interval=0.5,  #time in seconds
+                            function=state_handler.handle_event, 
+                            args=[states[event.pin_num] + "_event"])
+    unbounce_timer.start()
+    while True:
+      if (pfd.input_pins[event.pin_num] != event.direction or 
+          unbounce_timer.isAlive() == False):
+        print("hardware: event dismissed")
+        logger.info("hardware: event dismissed")
+        unbounce_timer.cancel()
+        break
+
+
+############################### init procedure ##############################
 listener = pfdio.InputEventListener(chip=pfd)
 
 #register input listeners
@@ -44,24 +72,22 @@ listener.register(pnum_btn_op, pfdio.IODIR_RISING_EDGE, handle_input_event)
 listener.register(pnum_btn_cl, pfdio.IODIR_RISING_EDGE, handle_input_event)
 listener.register(pnum_sns_op, pfdio.IODIR_FALLING_EDGE, handle_input_event)
 listener.register(pnum_sns_cl, pfdio.IODIR_FALLING_EDGE, handle_input_event)
+#listener.register(pnum_sns_op, pfdio.IODIR_RISING_EDGE, handle_input_event)
+l#istener.register(pnum_sns_cl, pfdio.IODIR_RISING_EDGE, handle_input_event)
 listener.activate()
 
-#TODO: create output listeners to make state changes in case of trouble
-# possible (e.g. state == opening and motor fails -> state will always remain
-# opening. Must this be prevented?)
-#TODO: create timing event to trigger opening or closing by time
-
 print("internal: hardware listeners registered")
+logger.info("internal: hardware listeners registered")
 
 #initialise internal state
 if(pfd.input_pins[pnum_sns_op].value):
-    state_handler = State_handler(states[pnum_sns_op])
+    state_handler = State_handler(states[pnum_sns_op], logger)
 elif(pfd.input_pins[pnum_sns_cl].value):
-    state_handler = State_handler(states[pnum_sns_cl])
+    state_handler = State_handler(states[pnum_sns_cl], logger)
 else:
-    state_handler = State_handler(states[404])
+    state_handler = State_handler(states[404], logger)
 
-timer_handler = Timer_handler(state_handler)
+timer_handler = Timer_handler(state_handler, logger)
 
 #start nodejs socket
-start(state_handler, timer_handler)
+start(state_handler, timer_handler, logger)

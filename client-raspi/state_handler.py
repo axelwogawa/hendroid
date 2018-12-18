@@ -14,14 +14,18 @@ class State_handler:
     
     def register_observer(self, callback):
         print("internal: registering state observer")
+        self.log.info("internal: registering state observer")
         self.observers.append(callback)
         callback(self.state)
         
     def update_all_observers(self):
-        print("internal: Calling " + str(len(self.observers)) + " state observers")
+        print("internal: Calling " + str(len(self.observers)) + 
+                " state observers")
+        self.log.info("internal: Calling " + str(len(self.observers)) + 
+                " state observers")
         [ callback(self.state) for callback in self.observers ]
         
-    def __init__(self, state):
+    def __init__(self, state, logger):
         self.states = {'closed', 'closing', 'opened', 'opening', 'intermediate'}
         self.motion_interval = 12.0     #time interval after which motor motion
                                         # will be stopped (in seconds)
@@ -30,6 +34,7 @@ class State_handler:
         self.set_state('')
         self.change_state(state)
         self.boInit = False
+        self.log = logger
 
     def set_state(self, string):
         if(string in self.states):
@@ -118,10 +123,12 @@ class State_handler:
                 outputs.light_intermediate()
                 
             print("internal: New state: " + self.state)
+            self.log.info("internal: New state: " + self.state)
             self.update_all_observers()
             
         else:
             print("internal: No state change")
+            self.log.info("internal: No state change")
             
         return success
     
