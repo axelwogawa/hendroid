@@ -13,7 +13,6 @@ def start(state_handler, timer_handler, logger):
         
     ############################# motion stuff ############################
     def on_motion_request(request):
-        print("client: new request: " + request)
         logger.info("client: new request: " + request)
         state_handler.handle_event(request + "_event")
 
@@ -54,7 +53,6 @@ def start(state_handler, timer_handler, logger):
                                }
                      }
     def on_timer_request(request):
-        print("client: new request: " + request)
         logger.info("client: new request: " + request)
         req_contents = request.split("-")
         timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
@@ -63,16 +61,12 @@ def start(state_handler, timer_handler, logger):
     ######################## single server connect routine #####################
     def connect(host, port):
         with SocketIO(host, port, LoggingNamespace) as socketIO:
-            print("connected to " + host)
+            logger.info("connected to " + host)
             def on_state_change(new_state):
-                print("client: state change observed at "
-                      + datetime.now().isoformat(' ') + ": " + new_state)
                 logger.info("client: state change observed: " + new_state)
                 socketIO.emit('state changed', new_state)
             
             def on_timer_change(update):
-                print("client: timer change observed at "
-                      + datetime.now().isoformat(' ') + ": " + update)
                 logger.info("client: timer change observed: " + update)
                 socketIO.emit('timer update', update)
             ############################ init routine ##########################
@@ -84,12 +78,8 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
                 socketIO.wait()
-                print("client: socket stopped waiting forever o.O ("
-                      + datetime.now().isoformat(' ') + ")")
                 logger.warning("client: socket stopped waiting forever o.O")
             except ConnectionError as e:
-                print('The server is down. Try again later.')
-                print(e)
                 logger.error('The server is down. Try again later.', 
                               exc_info=True)
                 
@@ -100,4 +90,4 @@ def start(state_handler, timer_handler, logger):
     connect("localhost", 3030)
 
     thread.join()
-    print("Thread finished")
+    logger.info("Thread finished")

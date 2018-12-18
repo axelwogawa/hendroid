@@ -35,28 +35,19 @@ class Timer_handler:
             #"/hendroid/client-raspi/timer_data.pkl", "rb") as input:
             with open(self.settings_file, "rb") as input:
                 self.open_time = pickle.load(input)
-                print("internal: read <open_time> from file: "
-                      + str(self.open_time))
                 self.log.info("internal: read <open_time> from file: "
                       + str(self.open_time))
                 self.close_time = pickle.load(input)
-                print("internal: read <close_time> from file: "
-                      + str(self.close_time))
                 self.log.info("internal: read <close_time> from file: "
                       + str(self.close_time))
                 self.auto_open = pickle.load(input)
-                print("internal: read <auto_open> from file: "
-                      + str(self.auto_open))
                 self.log.info("internal: read <auto_open> from file: "
                       + str(self.auto_open))
                 self.auto_close = pickle.load(input)
-                print("internal: read <auto_close> from file: "
-                      + str(self.auto_close))
                 self.log.info("internal: read <auto_close> from file: "
-                      + str(self.auto_close)
+                      + str(self.auto_close))
                 self.boInit = False
         except Exception as e:
-            print("internal error: timer state read from file: " + str(e))
             self.log.error("internal error: timer state read from file: ", 
                             exc_info=True)
             self.open_time = time(hour = 7, minute = 0)
@@ -64,7 +55,6 @@ class Timer_handler:
             self.auto_open = False
             self.boInit = False
             self.auto_close = False
-            print("internal: set timer to default settings")
             self.log.info("internal: set timer to default settings")
         self.scheduler.start()
     
@@ -101,7 +91,6 @@ class Timer_handler:
                 self.scheduler.resume_job(job_id=self.open_job.id)
             else:
                 self.scheduler.pause_job(job_id=self.open_job.id)
-            print("internal: set <auto_open> to " + str(self.auto_open))
             self.log.info("internal: set <auto_open> to " + str(self.auto_open))
             if(self.scheduler.running):
                 self.scheduler.resume()
@@ -120,7 +109,6 @@ class Timer_handler:
                 self.scheduler.resume_job(job_id=self.close_job.id)
             else:
                 self.scheduler.pause_job(job_id=self.close_job.id)
-            print("internal: set <auto_close> to " + str(self.auto_close))
             self.log.info("internal: set <auto_close> to " + 
                             str(self.auto_close))
             if(self.scheduler.running):
@@ -146,7 +134,6 @@ class Timer_handler:
                                                   ,hour = self.open_time.hour
                                                   ,minute = self.open_time.minute
                                                   )
-            print("internal: set <open_time> to " + str(self.open_time))
             self.log.info("internal: set <open_time> to " + str(self.open_time))
             if(self.scheduler.running):
                 self.scheduler.resume()
@@ -171,7 +158,6 @@ class Timer_handler:
                                                     ,hour = self.close_time.hour
                                                     ,minute = self.close_time.minute
                                                     )
-            print("internal: set <close_time> to " + str(self.close_time))
             self.log.info("internal: set <close_time> to " + 
                             str(self.close_time))
             if(self.scheduler.running):
@@ -182,7 +168,6 @@ class Timer_handler:
     
     ############################## other methods ##############################
     def register_observer(self, callback):
-        print("internal: registering timer observer")
         self.log.info("internal: registering timer observer")
         self.observers.append(callback)
         self.update_observer(callback)
@@ -220,14 +205,11 @@ class Timer_handler:
             update = update + "-" + val_str[1:]
             if(observers == None):
                 observers = self.observers
-            print("internal: Calling " + str(len(observers)) + " timer observers")
             self.log.info("internal: Calling " + str(len(observers)) + 
                             " timer observers")
             [ callback(update) for callback in observers ]
         
     def exec_motion(self, arg):
-        print("internal: scheduled event (" + datetime.now().isoformat(' ')
-              + ") - " + arg)
         self.log("internal: scheduled event - " + arg)
         self.state_handler.handle_event(arg + "_event")
     
@@ -241,11 +223,9 @@ class Timer_handler:
                     pickle.dump(self.close_time, output)
                     pickle.dump(self.auto_open, output)
                     pickle.dump(self.auto_close, output)
-                    print("internal: successfully saved timer setting to file")
                     self.log.info("internal: successfully saved timer setting" +
                                     " to file")
             except Exception as e:
-                print("internal error: write timer setting to file: " + str(e))
                 self.log.error("internal error: write timer setting to file: ",
                                 exec_info=True)
     
