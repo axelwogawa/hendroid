@@ -58,7 +58,8 @@ def handle_input_event(event):
         #although event listeners receive rising edge event (-> voltage),
         # input pin value is 0 afterwards (why?)
         if (pfd.input_pins[event.pin_num].value == event.direction):
-            logger.info("hardware: event dismissed")
+            logger.warning("hardware: event dismissed, it was a faulty "+
+                               "voltage drop")
             unbounce_timer.cancel()
             break
 

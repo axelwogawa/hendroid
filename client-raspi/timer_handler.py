@@ -210,7 +210,7 @@ class Timer_handler:
             [ callback(update) for callback in observers ]
         
     def exec_motion(self, arg):
-        self.log("internal: scheduled event - " + arg)
+        self.log.info("internal: scheduled event - " + arg)
         self.state_handler.handle_event(arg + "_event")
     
     def save_state(self):
