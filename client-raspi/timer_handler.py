@@ -16,9 +16,9 @@ import pickle
 import os
 
 class Timer_handler:
-    settings_file = "/home/pi/hendroid/client-raspi/timer_data.pkl"
+    
     ############################### constructor ###############################
-    def __init__(self, state_handler, logger):
+    def __init__(self, state_handler, logger, path):
         self.boInit = True
         self._open_time = None
         self._close_time = None
@@ -29,6 +29,7 @@ class Timer_handler:
         self.scheduler = BackgroundScheduler()
         self.observers = []
         self.log = logger
+        self.settings_file = path + "timer_data.pkl"
         #read most recent settings saved to file, if available
         try:
             #with open(os.environ['HOME'] + 

@@ -27,6 +27,8 @@ states =    {pnum_btn_op: "opening"
             ,404: "intermediate"
             }
 
+path = "/home/pi/hendroid/client-raspi/"
+
 
 ################################## logging #####################################
 logger = logging.getLogger("hendroid")
@@ -34,8 +36,7 @@ formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
 stderr_handler = logging.StreamHandler()
 stderr_handler.setFormatter(formatter)
 logger.addHandler(stderr_handler)
-file_handler = logging.FileHandler(filename="/home/pi/hendroid/client-raspi/" +
-                                       "hendroid.log")
+file_handler = logging.FileHandler(filename= path + "hendroid.log")
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG)

@@ -1,5 +1,6 @@
 #import event_handler
-import state_handler
+#import state_handler
+import camera_handler as cam
 from datetime import datetime, time
 from threading import Thread
 from socketIO_client_nexus import SocketIO, LoggingNamespace
@@ -11,13 +12,13 @@ def start(state_handler, timer_handler, logger):
         timer_handler.update_all_observers()
         
         
-    ############################# motion stuff ############################
+    ################################ motion stuff ##############################
     def on_motion_request(request):
         logger.info("client: new request: " + request)
         state_handler.handle_event(request + "_event")
 
         
-    ############################# timer stuff #############################
+    ################################ timer stuff ###############################
     #careful, very much python in here!
     def auto_open(val):
         val = val.lower()
@@ -53,15 +54,25 @@ def start(state_handler, timer_handler, logger):
                                }
                      }
     def on_timer_request(request):
-        logger.info("client: new request: " + request)
+        logger.info("client: new timer request: " + request)
         req_contents = request.split("-")
         timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
+        
+    
+    ############################### image stuff ################################
+    def on_image_request(request):
+        logger.info("client: new image request: " + request)
+        images = []
+        if request == "single":
+          images = [cam.take_single_snapshot(path)]
+        else if request == "sequence":
+          ;
 
 
-    ######################## single server connect routine #####################
+    ####################### single server connect routine ######################
     def connect(host, port):
         with SocketIO(host, port, LoggingNamespace) as socketIO:
-            logger.info("connected to " + host)
+            logger.info("client: connected to " + host)
             def on_state_change(new_state):
                 logger.info("client: state change observed: " + new_state)
                 socketIO.emit('state changed', new_state)
@@ -83,7 +94,7 @@ def start(state_handler, timer_handler, logger):
                 logger.error('The server is down. Try again later.', 
                               exc_info=True)
                 
-    ########################### connect to all servers ########################
+    ########################### connect to all servers #########################
     thread = Thread(target=connect, args=("hendroid.zosel.ch", 80))
     thread.start()
                 
