@@ -65,8 +65,7 @@ def start(state_handler, timer_handler, logger):
         images = []
         if request == "single":
           images = [cam.take_single_snapshot(path)]
-        else if request == "sequence":
-          ;
+        #elif request == "sequence":
 
 
     ####################### single server connect routine ######################

@@ -89,7 +89,7 @@ elif(pfd.input_pins[pnum_sns_cl].value):
 else:
     state_handler = State_handler(states[404], logger)
 
-timer_handler = Timer_handler(state_handler, logger)
+timer_handler = Timer_handler(state_handler, logger, path)
 
 #start nodejs socket
 start(state_handler, timer_handler, logger)
