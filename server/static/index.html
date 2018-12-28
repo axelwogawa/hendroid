@@ -9,10 +9,12 @@
   <link href='https://fonts.googleapis.com/css?family=Bungee' rel='stylesheet'>
   <link href='https://fonts.googleapis.com/css?family=Bungee Hairline' rel='stylesheet'>
   <link rel="stylesheet" type="text/css" href="style.css">
-  <link rel="apple-touch-icon" sizes="180x180" href="/henne_sq_180x180.png">
-  <link rel="icon" type="image/png" href="/henne_sq_32x32.png" sizes="32x32">
-  <link rel="icon" type="image/png" href="/henne_sq_16x16.png" sizes="16x16">
-  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" /> 
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
   <script src="/socket.io/socket.io.js"></script>
   <script src="ui-client.js"></script>
 </head>
@@ -28,18 +30,24 @@
     <div style="border: 5px solid midnightblue; margin: 0.5em auto 0.5em auto">
       <h3>Automatik einstellen</h3>
       <div style="margin: 0.5em auto 0.5em auto">
-        <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">Automatisch Öffnen
+        <input type="checkbox" id="cb_auto_open" onClick="timer_request(this, 'auto', 'open')">
+        <span class="checkboxtext">Automatisch Öffnen</span>
         <br>
-        <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
-        <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+        <input type="number" id="time_open_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">
+        :
+        <input type="number" id="time_open_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">
+        Uhr
         <button onClick="timer_request(this, 'time', 'open')">Uhrzeit übernehmen</button>
       </div>
       <div style="border-bottom: 1px solid grey; margin: 0.5em 5em 0.5em 5em"> </div>
       <div style="margin: 1em auto 1em auto">
-        <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">Automatisch Schließen
+        <input type="checkbox" id="cb_auto_close" onClick="timer_request(this, 'auto', 'close')">
+        <span>Automatisch Schließen</span>
         <br>
-        <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">:
-        <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">Uhr
+        <input type="number" id="time_close_h" min=0 max=23 defaultValue=0 onChange="reset_style(this)" onBlur="validate_value(this)">
+        :
+        <input type="number" id="time_close_m" min=0 max=59 defaultValue=0 step=10 onChange="reset_style(this)" onBlur="validate_value(this)">
+        Uhr
         <button onClick="timer_request(this, 'time', 'close')">Uhrzeit übernehmen</button>
       </div>
     </div>
