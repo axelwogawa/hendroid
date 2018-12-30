@@ -10,6 +10,7 @@ app.use(express.static(__dirname + '/static'))
 
 let state = "no_idea"
 let uis = new List()
+let pis = new List()
 /*'/' is the content of the initial GET request of a web browser calling the 
 root directory of a website -> answer by delivering website content*/
 app.get('/', (req, res) => {
@@ -30,7 +31,13 @@ io.on('connection', function connection(socket) {
                   socket.id, ")")
 
 
-  /*responses pi client -> UI client*/
+  /*messages from pi client*/
+  socket.on('i am a raspi', function() {
+    console.log(new Date().toLocaleString(), "New user is a Pi client (ID:",
+                  socket.id, ")")
+    pis.push(socket.id)
+  })
+
   socket.on('state changed', function(_state) {
     console.log(new Date().toLocaleString(),
                   "Emitting state change to ui client:", _state)
@@ -45,7 +52,7 @@ io.on('connection', function connection(socket) {
   })
 
 
-  /*requests UI client -> pi client*/
+  /*requests from UI client*/
   socket.on('ui initial request', function() {
     console.log(new Date().toLocaleString(),
                   "New user is a UI client - updating him (ID:",
@@ -68,14 +75,18 @@ io.on('connection', function connection(socket) {
 
 
   /*general connection events (all types of clients)*/
-  socket.on('disconnect', function() {
+  socket.on('disconnect', function(reason) {
     if(uis.delete(socket.id)) {
       console.log(new Date().toLocaleString(), "UI client disconnected (ID:",
                     socket.id, ")")
+    } else if(pis.delete(socket.id)) {
+      console.log(new Date().toLocaleString(),
+                    "PI client disconnected!!!!!111 (ID:", socket.id, ")")
     } else {
-      console.log(new Date().toLocaleString(), "PI client disconnected!!! (ID:",
+      console.log(new Date().toLocaleString(), "Old socket disconnected (ID:",
                     socket.id, ")")
     }
+    console.log("disconnection reason:", reason)
   })
 })
 

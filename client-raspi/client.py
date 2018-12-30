@@ -8,17 +8,21 @@ from socketIO_client_nexus import SocketIO, LoggingNamespace
 
 
 def start(state_handler, timer_handler, logger):
+    ############################### general stuff ##############################
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
-        
-        
+
+    def on_disconnect():
+        logger.warning("client: disconnected")
+
+
     ################################ motion stuff ##############################
     def on_motion_request(request):
         logger.info("client: new request: " + request)
         state_handler.handle_event(request + "_event")
 
-        
+
     ################################ timer stuff ###############################
     #careful, very much python in here!
     def auto_open(val):
@@ -73,6 +77,7 @@ def start(state_handler, timer_handler, logger):
     def connect(host, port):
         with SocketIO(host, port, LoggingNamespace) as socketIO:
             logger.info("client: connected to " + host)
+            socketIO.emit("i am a raspi")
             def on_state_change(new_state):
                 logger.info("client: state change observed: " + new_state)
                 socketIO.emit('state changed', new_state)
@@ -88,17 +93,18 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('motion request', on_motion_request)
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
+                socketIO.on('disconnect', on_disconnect)
                 socketIO.wait()
                 logger.warning("client: " + host +
                                   " socket stopped waiting forever o.O")
             except ConnectionError as e:
                 logger.error('The server is down.', exc_info=True)
                 raise
-                
+
     ########################### connect to all servers #########################
     thread = Thread(target=connect, args=("hendroid.zosel.ch", 80))
     thread.start()
-                
+
     connect("localhost", 3030)
 
     thread.join()
