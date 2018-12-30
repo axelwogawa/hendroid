@@ -3,6 +3,7 @@
 import camera_handler as cam
 from datetime import datetime, time
 from threading import Thread
+from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
 
@@ -88,10 +89,11 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
                 socketIO.wait()
-                logger.warning("client: socket stopped waiting forever o.O")
+                logger.warning("client: " + host +
+                                  " socket stopped waiting forever o.O")
             except ConnectionError as e:
-                logger.error('The server is down. Try again later.', 
-                              exc_info=True)
+                logger.error('The server is down.', exc_info=True)
+                raise
                 
     ########################### connect to all servers #########################
     thread = Thread(target=connect, args=("hendroid.zosel.ch", 80))
@@ -100,4 +102,4 @@ def start(state_handler, timer_handler, logger):
     connect("localhost", 3030)
 
     thread.join()
-    logger.info("Thread finished")
+    logger.warning("Remote server websocket thread finished")
