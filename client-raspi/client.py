@@ -22,8 +22,14 @@ def start(state_handler, timer_handler, logger):
             if(sockets[host].connected == False):
                 sockets[host].connect()
                 time.sleep(2)
-                logger.info("reconnected to " + host + ": " + 
+                logger.info("client: reconnected to " + host + ": " + 
                               str(sockets[host].connected))
+            else:
+                #hack to force disconnection and proper reconnection
+                # (reason: sometimes on_disconnect() is called, communication
+                # stops, but all sockets pretend to be still connected)
+                sockets[host].disconnect() 
+                logger.warning("client: forced disconnect from " + host)
 
 
     ################################ motion stuff ##############################
