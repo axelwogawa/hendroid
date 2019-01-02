@@ -102,10 +102,10 @@ def start(state_handler, timer_handler, logger):
                 raise
 
     ########################### connect to all servers #########################
-    thread = Thread(target=connect, args=("hendroid.zosel.ch", 80))
+    thread = Thread(target=connect, args=("localhost", 3030))
     thread.start()
 
-    connect("localhost", 3030)
+    connect("hendroid.zosel.ch", 80)
 
     thread.join()
-    logger.warning("Remote server websocket thread finished")
+    logger.warning("Localhost websocket thread finished")
