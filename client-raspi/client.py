@@ -7,6 +7,8 @@ from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
 
+sockets = {}
+
 def start(state_handler, timer_handler, logger):
     ############################### general stuff ##############################
     def on_full_request():
@@ -15,6 +17,13 @@ def start(state_handler, timer_handler, logger):
 
     def on_disconnect():
         logger.warning("client: disconnected")
+        global sockets
+        for host in sockets:
+            if(sockets[host].connected == False):
+                sockets[host].connect()
+                time.sleep(2)
+                logger.info("reconnected to " + host + ": " + 
+                              str(sockets[host].connected))
 
 
     ################################ motion stuff ##############################
@@ -76,6 +85,8 @@ def start(state_handler, timer_handler, logger):
     ####################### single server connect routine ######################
     def connect(host, port):
         with SocketIO(host, port, LoggingNamespace) as socketIO:
+            global sockets
+            sockets[host] = socketIO
             logger.info("client: connected to " + host)
             socketIO.emit("i am a raspi")
             def on_state_change(new_state):
