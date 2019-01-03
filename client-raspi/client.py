@@ -28,7 +28,7 @@ def start(state_handler, timer_handler, logger):
         if(remote_host in sockets):
             if(sockets[remote_host].connected == False):
                 logger.info("client: creating new socket to " + host
-                remote_socket = sockets.pop()
+                remote_socket = sockets.pop(remote_host)
                 del remote_socket
                 connect(remote_host, ports[remote_host])
           
