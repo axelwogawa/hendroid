@@ -24,7 +24,7 @@ class State_handler:
         
     def __init__(self, state, logger):
         self.states = {'closed', 'closing', 'opened', 'opening', 'intermediate'}
-        self.motion_interval = 12.0     #time interval after which motor motion
+        self.motion_interval = 9.0      #time interval after which motor motion
                                         # will be stopped (in seconds)
         self.log = logger
         self.motion_timer = Timer(self.motion_interval, None)

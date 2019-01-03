@@ -7,6 +7,9 @@ from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
 
+hosts = ["localhost", "hendroid.zosel.ch"]
+ports = { hosts[0]: 3030,
+          hosts[1]: 80}
 sockets = {}
 
 def start(state_handler, timer_handler, logger):
@@ -17,19 +20,32 @@ def start(state_handler, timer_handler, logger):
 
     def on_disconnect():
         logger.warning("client: disconnected")
+        
+        #hack to create new socket to remote server to force new connection
         global sockets
-        for host in sockets:
-            if(sockets[host].connected == False):
-                sockets[host].connect()
-                time.sleep(2)
-                logger.info("client: reconnected to " + host + ": " + 
-                              str(sockets[host].connected))
-            else:
-                #hack to force disconnection and proper reconnection
-                # (reason: sometimes on_disconnect() is called, communication
-                # stops, but all sockets pretend to be still connected)
-                sockets[host].disconnect() 
-                logger.warning("client: forced disconnect from " + host)
+        global hosts
+        remote_host = hosts[1]
+        if(remote_host in sockets):
+            if(sockets[remote_host].connected == False):
+                logger.info("client: creating new socket to " + host
+                remote_socket = sockets.pop()
+                del remote_socket
+                connect(remote_host, ports[remote_host])
+          
+        #for host in sockets:
+        #    logger.info("client: connected to " + host + ": " 
+        #                  + sockets[host].connected)
+        #    if(sockets[host].connected == False):
+        #        sockets[host].connect()
+        #        time.sleep(2)
+        #        logger.info("client: reconnected to " + host + ": " + 
+        #                      str(sockets[host].connected))
+        #    else:
+        #        #hack to force disconnection and proper reconnection
+        #        # (reason: sometimes on_disconnect() is called, communication
+        #        # stops, but all sockets pretend to be still connected)
+        #        sockets[host].disconnect() 
+        #        logger.warning("client: forced disconnect from " + host)
 
 
     ################################ motion stuff ##############################
@@ -119,10 +135,12 @@ def start(state_handler, timer_handler, logger):
                 raise
 
     ########################### connect to all servers #########################
-    thread = Thread(target=connect, args=("localhost", 3030))
+    global hosts
+    global ports
+    thread = Thread(target=connect, args=(hosts[0], ports[hosts[0]]))
     thread.start()
 
-    connect("hendroid.zosel.ch", 80)
+    connect(hosts[1], ports[hosts[1]])
 
     thread.join()
     logger.warning("Localhost websocket thread finished")
