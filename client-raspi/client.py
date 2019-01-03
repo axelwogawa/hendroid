@@ -25,7 +25,12 @@ def start(state_handler, timer_handler, logger):
         global sockets
         global hosts
         remote_host = hosts[1]
+        logger.info("client: " + len(sockets) + " sockets in place")
+        for host in sockets:
+          logger.info("client: socket to " + host)
         if(remote_host in sockets):
+            logger.info("client: connected to " + remote_host + ": " 
+                          + str(sockets[remote_host].connected))
             if(sockets[remote_host].connected == False):
                 logger.info("client: creating new socket to " + host)
                 remote_socket = sockets.pop(remote_host)
