@@ -20,30 +20,32 @@ def start(state_handler, timer_handler, logger):
 
     def on_disconnect():
         logger.warning("client: disconnected")
-        #hack to create new socket to remote server to force new connection
         global sockets
         global hosts
         remote_host = hosts[1]
         logger.info("client: " + str(len(sockets)) + " sockets in place")
-        for host in sockets:
-          logger.info("client: socket to " + host)
-        if(remote_host in sockets):
-            logger.info("client: connected to " + remote_host + ": " 
-                          + str(sockets[remote_host].connected))
-            if(sockets[remote_host].connected == False):
-                logger.info("client: creating new socket to " + host)
-                remote_socket = sockets.pop(remote_host)
-                del remote_socket
-                connect(remote_host, ports[remote_host])
-          
+        
+        #hack to create new socket to remote server to force new connection
         #for host in sockets:
-        #    logger.info("client: connected to " + host + ": " 
-        #                  + sockets[host].connected)
-        #    if(sockets[host].connected == False):
-        #        sockets[host].connect()
-        #        time.sleep(2)
-        #        logger.info("client: reconnected to " + host + ": " + 
-        #                      str(sockets[host].connected))
+        #  logger.info("client: socket to " + host)
+        #if(remote_host in sockets):
+        #    logger.info("client: connected to " + remote_host + ": " 
+        #                  + str(sockets[remote_host].connected))
+        #    if(sockets[remote_host].connected == False):
+        #        logger.info("client: creating new socket to " + host)
+        #        remote_socket = sockets.pop(remote_host)
+        #        del remote_socket
+        #        connect(remote_host, ports[remote_host])
+          
+        for host in sockets:
+            logger.info("client: connected to " + host + ": " 
+                          + str(sockets[host].connected))
+            if(sockets[host].connected == False):
+                sockets[host].connect()
+                sockets[host].emit("i am a raspi")
+                time.sleep(2)
+                logger.info("client: reconnected to " + host + ": " + 
+                              str(sockets[host].connected))
         #    else:
         #        #hack to force disconnection and proper reconnection
         #        # (reason: sometimes on_disconnect() is called, communication
