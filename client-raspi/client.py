@@ -22,22 +22,6 @@ def start(state_handler, timer_handler, logger):
     def on_disconnect():
         logger.warning("client: disconnected")
         global sockets
-        #global hosts
-        #remote_host = hosts[1]
-        #logger.info("client: " + str(len(sockets)) + " sockets in place")
-        
-        #hack to create new socket to remote server to force new connection
-        #for host in sockets:
-        #  logger.info("client: socket to " + host)
-        #if(remote_host in sockets):
-        #    logger.info("client: connected to " + remote_host + ": " 
-        #                  + str(sockets[remote_host].connected))
-        #    if(sockets[remote_host].connected == False):
-        #        logger.info("client: creating new socket to " + host)
-        #        remote_socket = sockets.pop(remote_host)
-        #        del remote_socket
-        #        connect(remote_host, ports[remote_host])
-          
         for host in sockets:
             logger.info("client: connected to " + host + ": " 
                           + str(sockets[host].connected))
@@ -47,6 +31,12 @@ def start(state_handler, timer_handler, logger):
                 pytime.sleep(2)
                 logger.info("client: reconnected to " + host + ": " + 
                               str(sockets[host].connected))
+                #hack to create new socket to force new connection:
+                if(sockets[host].connected == False):
+                    logger.info("client: creating new socket to " + host)
+                    socket = sockets.pop(host)
+                    del socket
+                    connect(host, ports[host])
         #    else:
         #        #hack to force disconnection and proper reconnection
         #        # (reason: sometimes on_disconnect() is called, communication
@@ -140,6 +130,8 @@ def start(state_handler, timer_handler, logger):
             except ConnectionError as e:
                 logger.error('The server is down.', exc_info=True)
                 raise
+            except IndexError as e:
+                logger.exception(str(e))
 
     ########################### connect to all servers #########################
     global hosts

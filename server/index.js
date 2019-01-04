@@ -37,6 +37,8 @@ io.on('connection', function connection(socket) {
                   socket.id, ")")
     if(pis.has(socket.id) === false){
       pis.push(socket.id)
+    } else {
+      console.log("Connection was an old one")
     }
   })
 
@@ -62,6 +64,8 @@ io.on('connection', function connection(socket) {
     socket.broadcast.emit('full state request')
     if(uis.has(socket.id) === false){
       uis.push(socket.id)
+    } else {
+      console.log("Connection was an old one")
     }
   })
 
