@@ -20,12 +20,11 @@ def start(state_handler, timer_handler, logger):
 
     def on_disconnect():
         logger.warning("client: disconnected")
-        
         #hack to create new socket to remote server to force new connection
         global sockets
         global hosts
         remote_host = hosts[1]
-        logger.info("client: " + len(sockets) + " sockets in place")
+        logger.info("client: " + str(len(sockets)) + " sockets in place")
         for host in sockets:
           logger.info("client: socket to " + host)
         if(remote_host in sockets):
