@@ -15,6 +15,16 @@ sockets = {}
 
 def start(state_handler, timer_handler, logger):
     ############################### general stuff ##############################
+    def create_new_socket(host):
+        #hack to create new socket to force new connection:
+        global sockets
+        global ports
+        logger.info("client: creating new socket to " + host)
+        if(host in sockets):
+          socket = sockets.pop(host)
+          del socket
+        connect(host, ports[host])
+    
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
@@ -31,12 +41,8 @@ def start(state_handler, timer_handler, logger):
                 pytime.sleep(2)
                 logger.info("client: reconnected to " + host + ": " + 
                               str(sockets[host].connected))
-                #hack to create new socket to force new connection:
                 if(sockets[host].connected == False):
-                    logger.info("client: creating new socket to " + host)
-                    socket = sockets.pop(host)
-                    del socket
-                    connect(host, ports[host])
+                    create_new_socket(host)
         #    else:
         #        #hack to force disconnection and proper reconnection
         #        # (reason: sometimes on_disconnect() is called, communication
@@ -102,8 +108,9 @@ def start(state_handler, timer_handler, logger):
 
 
     ####################### single server connect routine ######################
-    def connect(host, port):
-        with SocketIO(host, port, LoggingNamespace) as socketIO:
+    def connect(host):
+        global ports 
+        with SocketIO(host, ports[host], LoggingNamespace) as socketIO:
             global sockets
             sockets[host] = socketIO
             logger.info("client: connected to " + host)
@@ -124,22 +131,23 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
                 socketIO.on('disconnect', on_disconnect)
-                socketIO.wait()
+                socketIO.wait(1*60*60) #time in seconds -> 1 hour
                 logger.warning("client: " + host +
-                                  " socket stopped waiting forever o.O")
+                                  " socket stopped waiting")
             except ConnectionError as e:
                 logger.error('The server is down.', exc_info=True)
                 raise
             except IndexError as e:
                 logger.exception(str(e))
+                create_new_socket(host)
 
     ########################### connect to all servers #########################
     global hosts
     global ports
-    thread = Thread(target=connect, args=(hosts[0], ports[hosts[0]]))
+    thread = Thread(target=connect, args=(hosts[0]))
     thread.start()
 
-    connect(hosts[1], ports[hosts[1]])
+    connect(hosts[1])
 
     thread.join()
     logger.warning("Localhost websocket thread finished")
