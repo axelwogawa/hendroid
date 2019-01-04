@@ -8,20 +8,25 @@ from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
 
-hosts = ["localhost", "hendroid.zosel.ch"]
-ports = { hosts[0]: 3030,
-          hosts[1]: 80}
-sockets = {}
+hosts = { "localhost":        { "port":     3030,
+                                "socket":   None,
+                                "interval": 0
+                               }, 
+          "hendroid.zosel.ch":{ "port":     80,
+                                "socket":   None,
+                                "interval": 6*60*60
+                               }
+         }
 
 def start(state_handler, timer_handler, logger):
     ############################### general stuff ##############################
     def create_new_socket(host):
         #hack to create new socket to force new connection:
-        global sockets
-        global ports
+        global hosts
         logger.info("client: creating new socket to " + host)
-        if(host in sockets):
-            socket = sockets.pop(host)
+        socket = hosts[host]["socket"]
+        if(socket != None):
+            hosts[host]["socket"] = None
             del socket
         connect(host)
 
@@ -31,17 +36,18 @@ def start(state_handler, timer_handler, logger):
 
     def on_disconnect():
         logger.warning("client: disconnected")
-        global sockets
-        for host in sockets:
+        global hosts
+        for host in hosts:
+            socket = hosts[host]["socket"]
             logger.info("client: connected to " + host + ": " 
-                          + str(sockets[host].connected))
-            if(sockets[host].connected == False):
-                sockets[host].connect()
-                sockets[host].emit("i am a raspi")
+                          + str(socket.connected))
+            if(socket.connected == False):
+                socket.connect()
+                socket.emit("i am a raspi")
                 pytime.sleep(2)
                 logger.info("client: reconnected to " + host + ": " + 
-                              str(sockets[host].connected))
-                if(sockets[host].connected == False):
+                              str(socket.connected))
+                if(socket.connected == False):
                     create_new_socket(host)
         #    else:
         #        #hack to force disconnection and proper reconnection
@@ -109,10 +115,9 @@ def start(state_handler, timer_handler, logger):
 
     ####################### single server connect routine ######################
     def connect(host):
-        global ports 
-        with SocketIO(host, ports[host], LoggingNamespace) as socketIO:
-            global sockets
-            sockets[host] = socketIO
+        global hosts 
+        with SocketIO(host, hosts[host]["port"], LoggingNamespace) as socketIO:
+            hosts[host]["socket"] = socketIO
             logger.info("client: connected to " + host)
             socketIO.emit("i am a raspi")
             def on_state_change(new_state):
@@ -131,10 +136,12 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
                 socketIO.on('disconnect', on_disconnect)
-                socketIO.wait(6*60*60) #time in seconds -> 6 hours
+                if(hosts[host]["interval"] <= 0):
+                    socketIO.wait()
+                else
+                    socketIO.wait(hosts[host]["interval"]) #time in seconds
                 logger.warning("client: " + host +
                                   " socket stopped waiting")
-                create_new_socket(host)
             except ConnectionError as e:
                 logger.error('The server is down.', exc_info=True)
                 raise
@@ -147,11 +154,11 @@ def start(state_handler, timer_handler, logger):
 
     ########################### connect to all servers #########################
     global hosts
-    global ports
-    thread = Thread(target=connect, args=(hosts[0]))
+    thread = Thread(target=connect, args=(host=hosts.keys()[0]))
     thread.start()
-
-    connect(hosts[1])
+    
+    while(True):
+        create_new_socket(host=hosts.keys()[1])
 
     thread.join()
     logger.warning("Localhost websocket thread finished")
