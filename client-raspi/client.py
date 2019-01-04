@@ -21,10 +21,10 @@ def start(state_handler, timer_handler, logger):
         global ports
         logger.info("client: creating new socket to " + host)
         if(host in sockets):
-          socket = sockets.pop(host)
-          del socket
-        connect(host, ports[host])
-    
+            socket = sockets.pop(host)
+            del socket
+        connect(host)
+
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
