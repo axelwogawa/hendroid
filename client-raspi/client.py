@@ -39,23 +39,19 @@ def start(state_handler, timer_handler, logger):
         global hosts
         for host in hosts:
             socket = hosts[host]["socket"]
-            logger.info("client: connected to " + host + ": " 
-                          + str(socket.connected))
-            if(socket.connected == False):
-                socket.connect()
-                socket.emit("i am a raspi")
-                pytime.sleep(2)
-                logger.info("client: reconnected to " + host + ": " + 
-                              str(socket.connected))
+            if(socket != None):
+                logger.info("client: connected to " + host + ": " 
+                              + str(socket.connected))
                 if(socket.connected == False):
-                    create_new_socket(host)
-        #    else:
-        #        #hack to force disconnection and proper reconnection
-        #        # (reason: sometimes on_disconnect() is called, communication
-        #        # stops, but all sockets pretend to be still connected)
-        #        sockets[host].disconnect() 
-        #        logger.warning("client: forced disconnect from " + host)
-
+                    socket.connect()
+                    socket.emit("i am a raspi")
+                    pytime.sleep(2)
+                    logger.info("client: reconnected to " + host + ": " + 
+                                  str(socket.connected))
+                    if(socket.connected == False):
+                        create_new_socket(host)
+            else:
+                logger.warning("client: there's no socket to " + host)
 
     ################################ motion stuff ##############################
     def on_motion_request(request):
@@ -138,7 +134,7 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('disconnect', on_disconnect)
                 if(hosts[host]["interval"] <= 0):
                     socketIO.wait()
-                else
+                else:
                     socketIO.wait(hosts[host]["interval"]) #time in seconds
                 logger.warning("client: " + host +
                                   " socket stopped waiting")
