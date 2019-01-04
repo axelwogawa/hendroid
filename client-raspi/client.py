@@ -7,15 +7,15 @@ from threading import Thread
 from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
 
-
-hosts = { "localhost":        { "port":     3030,
-                                "socket":   None,
-                                "interval": 0
-                               }, 
-          "hendroid.zosel.ch":{ "port":     80,
-                                "socket":   None,
-                                "interval": 6*60*60
-                               }
+hostnames = ["localhost", "hendroid.zosel.ch"]
+hosts = {hostnames[0]:  { "port":     3030,
+                          "socket":   None,
+                          "interval": 0
+                         }, 
+         hostnames[1]:  { "port":     80,
+                          "socket":   None,
+                          "interval": 6*60*60
+                         }
          }
 
 def start(state_handler, timer_handler, logger):
@@ -150,11 +150,11 @@ def start(state_handler, timer_handler, logger):
 
     ########################### connect to all servers #########################
     global hosts
-    thread = Thread(target=connect, args=(hosts.keys()[0]))
+    thread = Thread(target=connect, args=(hostnames[0]))
     thread.start()
     
     while(True):
-        create_new_socket(hosts.keys()[1])
+        create_new_socket(hostnames[1])
 
     thread.join()
     logger.warning("Localhost websocket thread finished")
