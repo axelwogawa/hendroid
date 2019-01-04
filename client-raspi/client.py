@@ -150,11 +150,11 @@ def start(state_handler, timer_handler, logger):
 
     ########################### connect to all servers #########################
     global hosts
-    thread = Thread(target=connect, args=(host=hosts.keys()[0]))
+    thread = Thread(target=connect, args=(hosts.keys()[0]))
     thread.start()
     
     while(True):
-        create_new_socket(host=hosts.keys()[1])
+        create_new_socket(hosts.keys()[1])
 
     thread.join()
     logger.warning("Localhost websocket thread finished")
