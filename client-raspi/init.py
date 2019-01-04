@@ -11,6 +11,25 @@ from threading import Timer
 import logging
 
 
+############################### constants ###################################
+#pin numbers of the inputs
+pnum_btn_op = 0  #the open button
+pnum_btn_cl = 3  #the close button
+pnum_sns_op = 5  #the opened position sensor
+pnum_sns_cl = 4  #the closed position sensor
+
+#available states; need to be named consistantly to state_handler states (see
+# state_handler.py)
+states =    {pnum_btn_op: "opening"
+            ,pnum_btn_cl: "closing"
+            ,pnum_sns_op: "opened"
+            ,pnum_sns_cl: "closed"
+            ,404: "intermediate"
+            }
+
+path = "/home/pi/hendroid/client-raspi/"
+
+
 ################################## logging #####################################
 logger = logging.getLogger("hendroid")
 formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(message)s')
@@ -24,34 +43,16 @@ logger.setLevel(logging.DEBUG)
 
 
 try:
-    ############################### constants ###################################
-    #pin numbers of the inputs
-    pnum_btn_op = 0  #the open button
-    pnum_btn_cl = 3  #the close button
-    pnum_sns_op = 5  #the opened position sensor
-    pnum_sns_cl = 4  #the closed position sensor
-
-    #available states; need to be named consistantly to state_handler states (see
-    # state_handler.py)
-    states =    {pnum_btn_op: "opening"
-                ,pnum_btn_cl: "closing"
-                ,pnum_sns_op: "opened"
-                ,pnum_sns_cl: "closed"
-                ,404: "intermediate"
-                }
-
-    path = "/home/pi/hendroid/client-raspi/"
-
-
-    ################################# HW handler ###################################
+    ################################# HW handler ###############################
     pfd = pfdio.PiFaceDigital()
 
 
-    ############################ callback functions ##############################
+    ############################ callback functions ############################
     #pass event string over to event handler
     def handle_input_event(event):
-        logger.info("hardware: event detected at pin number " + str(event.pin_num))
-        #wait if input state persists for at least 500ms, otherwise dismiss event
+        logger.info("hardware: event detected at pin number " 
+                      + str(event.pin_num))
+        #wait if input state persists for at least 0.2s, otherwise dismiss event
         unbounce_timer = Timer( interval=0.2,  #time in seconds
                                 function=state_handler.handle_event, 
                                 args=[states[event.pin_num] + "_event"])
@@ -66,7 +67,7 @@ try:
                 break
 
 
-    ############################### init procedure ##############################
+    ############################### init procedure #############################
     listener = pfdio.InputEventListener(chip=pfd)
 
     #register input listeners
