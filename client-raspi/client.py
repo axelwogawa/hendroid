@@ -131,15 +131,19 @@ def start(state_handler, timer_handler, logger):
                 socketIO.on('set timer request', on_timer_request)
                 socketIO.on('full state request', on_full_request)
                 socketIO.on('disconnect', on_disconnect)
-                socketIO.wait(1*60*60) #time in seconds -> 1 hour
+                socketIO.wait(6*60*60) #time in seconds -> 6 hours
                 logger.warning("client: " + host +
                                   " socket stopped waiting")
+                create_new_socket(host)
             except ConnectionError as e:
                 logger.error('The server is down.', exc_info=True)
                 raise
             except IndexError as e:
                 logger.exception(str(e))
                 create_new_socket(host)
+            except Exception as e:
+                logger.exception(str(e))
+                raise
 
     ########################### connect to all servers #########################
     global hosts
