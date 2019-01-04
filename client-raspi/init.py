@@ -95,6 +95,6 @@ try:
     #start nodejs socket
     start(state_handler, timer_handler, logger)
     
-except Exception e:
+except Exception as e:
     logger.exception(str(e))
     raise
