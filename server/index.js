@@ -35,7 +35,9 @@ io.on('connection', function connection(socket) {
   socket.on('i am a raspi', function() {
     console.log(new Date().toLocaleString(), "New user is a Pi client (ID:",
                   socket.id, ")")
-    pis.push(socket.id)
+    if(pis.has(socket.id) === false){
+      pis.push(socket.id)
+    }
   })
 
   socket.on('state changed', function(_state) {
@@ -58,7 +60,9 @@ io.on('connection', function connection(socket) {
                   "New user is a UI client - updating him (ID:",
                   socket.id, ")")
     socket.broadcast.emit('full state request')
-    uis.push(socket.id)
+    if(uis.has(socket.id) === false){
+      uis.push(socket.id)
+    }
   })
 
   socket.on('ui motion request', function(_state) {

@@ -2,6 +2,7 @@
 #import state_handler
 import camera_handler as cam
 from datetime import datetime, time
+import time as pytime
 from threading import Thread
 from requests.exceptions import ConnectionError
 from socketIO_client_nexus import SocketIO, LoggingNamespace
@@ -21,9 +22,9 @@ def start(state_handler, timer_handler, logger):
     def on_disconnect():
         logger.warning("client: disconnected")
         global sockets
-        global hosts
-        remote_host = hosts[1]
-        logger.info("client: " + str(len(sockets)) + " sockets in place")
+        #global hosts
+        #remote_host = hosts[1]
+        #logger.info("client: " + str(len(sockets)) + " sockets in place")
         
         #hack to create new socket to remote server to force new connection
         #for host in sockets:
@@ -43,7 +44,7 @@ def start(state_handler, timer_handler, logger):
             if(sockets[host].connected == False):
                 sockets[host].connect()
                 sockets[host].emit("i am a raspi")
-                time.sleep(2)
+                pytime.sleep(2)
                 logger.info("client: reconnected to " + host + ": " + 
                               str(sockets[host].connected))
         #    else:
