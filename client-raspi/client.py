@@ -6,6 +6,7 @@ import time as pytime
 from threading import Thread
 from requests.exceptions import ConnectionError
 from flask import Flask
+import requests
 
 app = Flask(__name__)
 
@@ -93,49 +94,27 @@ def start(state_handler, timer_handler, logger):
         #elif request == "sequence":
 
 
-    ####################### single server connect routine ######################
-    def connect(host):
-        # call node js proxy /hello
-        # old: socketIO.emit("i am a raspi")
-        def on_state_change(new_state):
-            logger.info("client: state change observed: " + new_state)
-            socketIO.emit('state changed', new_state)
+# call node js proxy /hello
+# old: socketIO.emit("i am a raspi")
+def on_state_change(new_state):
+    logger.info("client: state change observed: " + new_state)
+    r = requests.post("http://localhost:3031/stateChange", data={
+        "new_state": new_state
+    })
+    print(r.text)
 
-        def on_timer_change(update):
-            logger.info("client: timer change observed: " + update)
-            socketIO.emit('timer update', update)
-        ############################ init routine ##########################
-        try:
-            state_handler.register_observer(on_state_change)
-            timer_handler.register_observer(on_timer_change)
+def on_timer_change(update):
+    logger.info("client: timer change observed: " + update)
+    # socketIO.emit('timer update', update)
+############################ init routine ##########################
+try:
+    state_handler.register_observer(on_state_change)
+    timer_handler.register_observer(on_timer_change)
 
-            socketIO.on('motion request', on_motion_request)
-            socketIO.on('set timer request', on_timer_request)
-            socketIO.on('full state request', on_full_request)
-            socketIO.on('disconnect', on_disconnect)
-            if(hosts[host]["interval"] <= 0):
-                socketIO.wait()
-            else:
-                socketIO.wait(hosts[host]["interval"]) #time in seconds
-            logger.warning("client: " + host +
-                              " socket stopped waiting")
-        except ConnectionError as e:
-            logger.error('The server is down.', exc_info=True)
-            raise
-        except IndexError as e:
-            logger.exception(str(e))
-            create_new_socket(host)
-        except Exception as e:
-            logger.exception(str(e))
-            raise
-
-    ########################### connect to all servers #########################
-    global hosts
-    thread = Thread(target=connect, args=(hostnames[0]))
-    thread.start()
-    
-    while(True):
-        create_new_socket(hostnames[1])
-
-    thread.join()
-    logger.warning("Localhost websocket thread finished")
+    # socketIO.on('motion request', on_motion_request)
+    # socketIO.on('set timer request', on_timer_request)
+    # socketIO.on('full state request', on_full_request)
+    # socketIO.on('disconnect', on_disconnect)
+except Exception as e:
+    logger.exception(str(e))
+    raise

@@ -1,7 +1,8 @@
 const io = require("socket.io-client");
 const request = require("request");
 
-const socket = io("http://localhost:3030");
+// const socket = io("http://localhost:3030");
+const socket = io("http://hendroid.zosel.ch");
 
 const express = require("express");
 const app = express();
@@ -27,7 +28,7 @@ socket.on("motion request", function(state) {
 
 app.post("/stateChange", function(req, res) {
   console.log("stateChange info from raspi", req.body);
-  socket.emit("state changed", req.body.new_state)
+  socket.emit("state changed", req.body.new_state);
   res.send("all good");
 });
 
