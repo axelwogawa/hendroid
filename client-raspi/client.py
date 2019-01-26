@@ -5,7 +5,13 @@ from datetime import datetime, time
 import time as pytime
 from threading import Thread
 from requests.exceptions import ConnectionError
-from socketIO_client_nexus import SocketIO, LoggingNamespace
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello_world():
+    return 'Hello, i\'m our flask server!'
 
 hostnames = ["localhost", "hendroid.zosel.ch"]
 hosts = {hostnames[0]:  { "port":     3030,
@@ -20,43 +26,21 @@ hosts = {hostnames[0]:  { "port":     3030,
 
 def start(state_handler, timer_handler, logger):
     ############################### general stuff ##############################
-    def create_new_socket(host):
-        #hack to create new socket to force new connection:
-        global hosts
-        logger.info("client: creating new socket to " + host)
-        socket = hosts[host]["socket"]
-        if(socket != None):
-            hosts[host]["socket"] = None
-            del socket
-        connect(host)
 
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
 
-    def on_disconnect():
-        logger.warning("client: disconnected")
-        global hosts
-        for host in hosts:
-            socket = hosts[host]["socket"]
-            if(socket != None):
-                logger.info("client: connected to " + host + ": " 
-                              + str(socket.connected))
-                if(socket.connected == False):
-                    socket.connect()
-                    socket.emit("i am a raspi")
-                    pytime.sleep(2)
-                    logger.info("client: reconnected to " + host + ": " + 
-                                  str(socket.connected))
-                    if(socket.connected == False):
-                        create_new_socket(host)
-            else:
-                logger.warning("client: there's no socket to " + host)
-
     ################################ motion stuff ##############################
-    def on_motion_request(request):
-        logger.info("client: new request: " + request)
-        state_handler.handle_event(request + "_event")
+
+    @app.route("/motionRequest", methods=['POST'])
+    def on_motion_request():
+        state = request.form.get('state')
+        logger.info("client: new request: {}".format(state))
+        try:
+            return state_handler.handle_event(state)
+        except Exception as e:
+            return str(e), 400
 
 
     ################################ timer stuff ###############################
@@ -111,42 +95,39 @@ def start(state_handler, timer_handler, logger):
 
     ####################### single server connect routine ######################
     def connect(host):
-        global hosts 
-        with SocketIO(host, hosts[host]["port"], LoggingNamespace) as socketIO:
-            hosts[host]["socket"] = socketIO
-            logger.info("client: connected to " + host)
-            socketIO.emit("i am a raspi")
-            def on_state_change(new_state):
-                logger.info("client: state change observed: " + new_state)
-                socketIO.emit('state changed', new_state)
-            
-            def on_timer_change(update):
-                logger.info("client: timer change observed: " + update)
-                socketIO.emit('timer update', update)
-            ############################ init routine ##########################
-            try:
-                state_handler.register_observer(on_state_change)
-                timer_handler.register_observer(on_timer_change)
+        # call node js proxy /hello
+        # old: socketIO.emit("i am a raspi")
+        def on_state_change(new_state):
+            logger.info("client: state change observed: " + new_state)
+            socketIO.emit('state changed', new_state)
 
-                socketIO.on('motion request', on_motion_request)
-                socketIO.on('set timer request', on_timer_request)
-                socketIO.on('full state request', on_full_request)
-                socketIO.on('disconnect', on_disconnect)
-                if(hosts[host]["interval"] <= 0):
-                    socketIO.wait()
-                else:
-                    socketIO.wait(hosts[host]["interval"]) #time in seconds
-                logger.warning("client: " + host +
-                                  " socket stopped waiting")
-            except ConnectionError as e:
-                logger.error('The server is down.', exc_info=True)
-                raise
-            except IndexError as e:
-                logger.exception(str(e))
-                create_new_socket(host)
-            except Exception as e:
-                logger.exception(str(e))
-                raise
+        def on_timer_change(update):
+            logger.info("client: timer change observed: " + update)
+            socketIO.emit('timer update', update)
+        ############################ init routine ##########################
+        try:
+            state_handler.register_observer(on_state_change)
+            timer_handler.register_observer(on_timer_change)
+
+            socketIO.on('motion request', on_motion_request)
+            socketIO.on('set timer request', on_timer_request)
+            socketIO.on('full state request', on_full_request)
+            socketIO.on('disconnect', on_disconnect)
+            if(hosts[host]["interval"] <= 0):
+                socketIO.wait()
+            else:
+                socketIO.wait(hosts[host]["interval"]) #time in seconds
+            logger.warning("client: " + host +
+                              " socket stopped waiting")
+        except ConnectionError as e:
+            logger.error('The server is down.', exc_info=True)
+            raise
+        except IndexError as e:
+            logger.exception(str(e))
+            create_new_socket(host)
+        except Exception as e:
+            logger.exception(str(e))
+            raise
 
     ########################### connect to all servers #########################
     global hosts
