@@ -13,7 +13,7 @@ const express = require("express");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
-const raspi_addr "http://localhost:5000/"
+const raspi_addr = "http://localhost:5000/"
 
 
 //Say hello to remote server on connection
