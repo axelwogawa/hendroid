@@ -86,8 +86,8 @@ def start(state_handler, timer_handler, logger):
         logger.info("client: new timer request: " + str(req))
         req_contents = req.split("-")
         timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
-        return 200
-        
+        return ""
+
     def on_timer_change(update):
         logger.info("client: timer change observed: " + update)
         r = http.post(proxy + "timerUpdate", data={

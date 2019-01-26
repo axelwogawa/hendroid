@@ -7,7 +7,7 @@
 const io = require("socket.io-client");
 const request = require("request");
 // const socket = io("http://localhost:3030");
-const socket = io("http://hendroid.zosel.ch");
+const socket = io("https://hendroid.zosel.ch");
 
 const express = require("express");
 const app = express();
