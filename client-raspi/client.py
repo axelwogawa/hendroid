@@ -31,6 +31,7 @@ def start(state_handler, timer_handler, logger):
         try:
             return state_handler.handle_event(state)
         except Exception as e:
+            logger.exception(str(e))
             return str(e), 400
 
 

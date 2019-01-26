@@ -55,7 +55,7 @@ try:
         #wait if input state persists for at least 0.2s, otherwise dismiss event
         unbounce_timer = Timer( interval=0.2,  #time in seconds
                                 function=state_handler.handle_event, 
-                                args=[states[event.pin_num] + "_event"])
+                                args=[states[event.pin_num]])
         unbounce_timer.start()
         while unbounce_timer.isAlive():
             #although event listeners receive rising edge event (-> voltage),

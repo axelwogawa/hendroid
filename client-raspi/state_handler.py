@@ -49,7 +49,7 @@ class State_handler:
     def handle_event(self, state):
         if state not in self.get_states():
             raise Exception('invalid state request: ' + state)
-        if self.change_state(key):
+        if self.change_state(state):
             return "state change triggered"
         return "no state change"
 
