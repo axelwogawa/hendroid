@@ -8,24 +8,16 @@ from requests.exceptions import ConnectionError
 from flask import Flask
 import requests
 
-app = Flask(__name__)
-
-@app.route('/')
-def hello_world():
-    return 'Hello, i\'m our flask server!'
-
-hostnames = ["localhost", "hendroid.zosel.ch"]
-hosts = {hostnames[0]:  { "port":     3030,
-                          "socket":   None,
-                          "interval": 0
-                         }, 
-         hostnames[1]:  { "port":     80,
-                          "socket":   None,
-                          "interval": 6*60*60
-                         }
-         }
-
 def start(state_handler, timer_handler, logger):
+    app = Flask(__name__)
+
+    @app.route('/')
+    def hello_world():
+        return 'Hello, i\'m our flask server!'
+
+    # start app
+    app.run(host='localhost:5000')
+
     ############################### general stuff ##############################
 
     def on_full_request():
@@ -92,7 +84,6 @@ def start(state_handler, timer_handler, logger):
         if request == "single":
           images = [cam.take_single_snapshot(path)]
         #elif request == "sequence":
-
 
 # call node js proxy /hello
 # old: socketIO.emit("i am a raspi")
