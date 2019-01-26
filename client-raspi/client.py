@@ -9,10 +9,9 @@ from requests.exceptions import ConnectionError
 from flask import Flask
 import requests
 
-def start(state_handler, timer_handler, logger, app):
+def start(state_handler, timer_handler, logger):
     app = Flask(__name__)
-    app.run()
-
+    
     @app.route('/')
     def hello_world():
         return 'Hello, i\'m our flask server!'
@@ -84,27 +83,29 @@ def start(state_handler, timer_handler, logger, app):
           images = [cam.take_single_snapshot(path)]
         #elif request == "sequence":
 
-# call node js proxy /hello
-# old: socketIO.emit("i am a raspi")
-def on_state_change(new_state):
-    logger.info("client: state change observed: " + new_state)
-    r = requests.post("http://localhost:3031/stateChange", data={
-        "new_state": new_state
-    })
-    print(r.text)
+    # call node js proxy /hello
+    # old: socketIO.emit("i am a raspi")
+    def on_state_change(new_state):
+        logger.info("client: state change observed: " + new_state)
+        r = requests.post("http://localhost:3031/stateChange", data={
+            "new_state": new_state
+        })
+        print(r.text)
 
-def on_timer_change(update):
-    logger.info("client: timer change observed: " + update)
-    # socketIO.emit('timer update', update)
-############################ init routine ##########################
-try:
-    state_handler.register_observer(on_state_change)
-    timer_handler.register_observer(on_timer_change)
+    def on_timer_change(update):
+        logger.info("client: timer change observed: " + update)
+        # socketIO.emit('timer update', update)
+    ############################ init routine ##########################
+    try:
+        state_handler.register_observer(on_state_change)
+        timer_handler.register_observer(on_timer_change)
 
-    # socketIO.on('motion request', on_motion_request)
-    # socketIO.on('set timer request', on_timer_request)
-    # socketIO.on('full state request', on_full_request)
-    # socketIO.on('disconnect', on_disconnect)
-except Exception as e:
-    logger.exception(str(e))
-    raise
+        # socketIO.on('motion request', on_motion_request)
+        # socketIO.on('set timer request', on_timer_request)
+        # socketIO.on('full state request', on_full_request)
+        # socketIO.on('disconnect', on_disconnect)
+        
+        app.run()
+    except Exception as e:
+        logger.exception(str(e))
+        raise
