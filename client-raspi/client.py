@@ -10,20 +10,19 @@ from flask import Flask, request
 import requests as http
 
 def start(state_handler, timer_handler, logger):
+    proxy = "http://localhost:3031/"
     app = Flask(__name__)
     
+    ############################### general stuff ##############################
     @app.route('/')
     def hello_world():
         return 'Hello, i\'m our flask server!'
-
-    ############################### general stuff ##############################
 
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
 
     ################################ motion stuff ##############################
-
     @app.route("/motionRequest", methods=['POST'])
     def on_motion_request():
         state = request.form.get('state')
@@ -33,6 +32,13 @@ def start(state_handler, timer_handler, logger):
         except Exception as e:
             logger.exception(str(e))
             return str(e), 400
+
+    def on_state_change(new_state):
+        logger.info("client: state change observed: " + new_state)
+        r = http.post(proxy + "stateChange", data={
+            "new_state": new_state
+        })
+        logger.debug("client: proxy response: " + r.text)
 
 
     ################################ timer stuff ###############################
@@ -70,12 +76,23 @@ def start(state_handler, timer_handler, logger):
                                ,"close": time_close
                                }
                      }
-    def on_timer_request(request):
-        logger.info("client: new timer request: " + request)
-        req_contents = request.split("-")
+
+    @app.route("/timerRequest", methods=['POST'])
+    def on_timer_request():
+        req = request.form.get('req')
+        logger.info("client: new timer request: " + str(req))
+        req_contents = req.split("-")
         timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
+        return 200
         
-    
+    def on_timer_change(update):
+        logger.info("client: timer change observed: " + update)
+        r = http.post(proxy + "timerUpdate", data={
+            "update": update
+        })
+        logger.debug("client: proxy response: " + r.text)
+
+
     ############################### image stuff ################################
     def on_image_request(request):
         logger.info("client: new image request: " + request)
@@ -84,18 +101,7 @@ def start(state_handler, timer_handler, logger):
           images = [cam.take_single_snapshot(path)]
         #elif request == "sequence":
 
-    # call node js proxy /hello
-    # old: socketIO.emit("i am a raspi")
-    def on_state_change(new_state):
-        logger.info("client: state change observed: " + new_state)
-        r = http.post("http://localhost:3031/stateChange", data={
-            "new_state": new_state
-        })
-        print(r.text)
 
-    def on_timer_change(update):
-        logger.info("client: timer change observed: " + update)
-        # socketIO.emit('timer update', update)
     ############################ init routine ##########################
     try:
         state_handler.register_observer(on_state_change)
