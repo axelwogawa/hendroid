@@ -6,8 +6,8 @@ import time as pytime
 from threading import Thread
 from requests.exceptions import ConnectionError
 #from init import app
-from flask import Flask
-import requests
+from flask import Flask, request
+import requests as http
 
 def start(state_handler, timer_handler, logger):
     app = Flask(__name__)
@@ -25,7 +25,7 @@ def start(state_handler, timer_handler, logger):
     ################################ motion stuff ##############################
 
     @app.route("/motionRequest", methods=['POST'])
-    def on_motion_request(request):
+    def on_motion_request():
         state = request.form.get('state')
         logger.info("client: new request: {}".format(state))
         try:
@@ -87,7 +87,7 @@ def start(state_handler, timer_handler, logger):
     # old: socketIO.emit("i am a raspi")
     def on_state_change(new_state):
         logger.info("client: state change observed: " + new_state)
-        r = requests.post("http://localhost:3031/stateChange", data={
+        r = http.post("http://localhost:3031/stateChange", data={
             "new_state": new_state
         })
         print(r.text)
