@@ -12,15 +12,18 @@ import requests as http
 def start(state_handler, timer_handler, logger):
     proxy = "http://localhost:3031/"
     app = Flask(__name__)
-    
+
+
     ############################### general stuff ##############################
     @app.route('/')
     def hello_world():
         return 'Hello, i\'m our flask server!'
 
+    @app.route("/fullRequest", methods=['POST'])
     def on_full_request():
         state_handler.update_all_observers()
         timer_handler.update_all_observers()
+
 
     ################################ motion stuff ##############################
     @app.route("/motionRequest", methods=['POST'])

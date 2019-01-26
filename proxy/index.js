@@ -21,6 +21,20 @@ socket.emit("i am a raspi");
 
 
 //###### Messages from remote server (socketIO) to raspi (Flaws server) ########
+//full state request
+socket.on("full state request", function() {
+  console.log("received full state request");
+  request.post(
+    raspi_addr + "fullRequest",
+    function(error, response, body) {
+      if (error) {
+        console.error("Error from raspi", error);
+      }
+      console.log("Raspi response", response && response.statusCode, body);
+    }
+  );
+});
+
 //motion request
 socket.on("motion request", function(state) {
   console.log("received motion request: state =", state);
