@@ -25,7 +25,7 @@ def start(state_handler, timer_handler, logger):
     ################################ motion stuff ##############################
 
     @app.route("/motionRequest", methods=['POST'])
-    def on_motion_request():
+    def on_motion_request(request):
         state = request.form.get('state')
         logger.info("client: new request: {}".format(state))
         try:
