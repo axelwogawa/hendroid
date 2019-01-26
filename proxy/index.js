@@ -13,6 +13,8 @@ const express = require("express");
 const app = express();
 app.use(express.urlencoded({ extended: false }));
 
+const raspi_addr "http://localhost:5000/"
+
 
 //Say hello to remote server on connection
 socket.emit("i am a raspi");
@@ -23,9 +25,26 @@ socket.emit("i am a raspi");
 socket.on("motion request", function(state) {
   console.log("received motion request: state =", state);
   request.post(
-    "http://localhost:5000/motionRequest",
+    raspi_addr + "motionRequest",
     {
       form: { state }
+    },
+    function(error, response, body) {
+      if (error) {
+        console.error("Error from raspi", error);
+      }
+      console.log("Raspi response", response && response.statusCode, body);
+    }
+  );
+});
+
+//set timer request
+socket.on("set timer request", function(req) {
+  console.log("received timer request: ", req);
+  request.post(
+    raspi_addr + "timerRequest",
+    {
+      form: { req }
     },
     function(error, response, body) {
       if (error) {
@@ -42,6 +61,13 @@ socket.on("motion request", function(state) {
 app.post("/stateChange", function(req, res) {
   console.log("stateChange info from raspi", req.body);
   socket.emit("state changed", req.body.new_state);
+  res.send("all good");
+});
+
+//timer update
+app.post("/timerUpdate", function(req, res) {
+  console.log("timerUpdate from raspi", req.body);
+  socket.emit("timer update", req.body.update);
   res.send("all good");
 });
 
