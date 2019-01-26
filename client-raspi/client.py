@@ -5,10 +5,13 @@ from datetime import datetime, time
 import time as pytime
 from threading import Thread
 from requests.exceptions import ConnectionError
-from init import app
+#from init import app
+from flask import Flask
 import requests
 
-def start(state_handler, timer_handler, logger):
+def start(state_handler, timer_handler, logger, app):
+    app = Flask(__name__)
+    app.run()
 
     @app.route('/')
     def hello_world():

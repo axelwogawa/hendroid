@@ -9,9 +9,7 @@ from client import start
 from timer_handler import Timer_handler
 from threading import Timer
 import logging
-from flask import Flask
 
-app = Flask(__name__)
 
 ############################### constants ###################################
 #pin numbers of the inputs
