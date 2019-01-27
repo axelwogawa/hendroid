@@ -212,7 +212,7 @@ class Timer_handler:
         
     def exec_motion(self, arg):
         self.log.info("internal: scheduled event - " + arg)
-        self.state_handler.handle_event(arg + "_event")
+        self.state_handler.handle_event(arg)
     
     def save_state(self):
         if(self.boInit == False):
