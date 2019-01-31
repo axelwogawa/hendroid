@@ -6,8 +6,7 @@
 
 const io = require("socket.io-client");
 const request = require("request");
-// const socket = io("http://localhost:3030");
-const socket = io("https://hendroid.zosel.ch");
+const sockets = [io("http://localhost:3030"), io("https://hendroid.zosel.ch")];
 
 const express = require("express");
 const app = express();
@@ -16,74 +15,65 @@ app.use(express.urlencoded({ extended: false }));
 const raspi_addr = "http://localhost:5000/"
 
 
-//Say hello to remote server on connection
-socket.emit("i am a raspi");
+
+sockets.forEach(function (socket){
+  //Say hello to remote server on connection
+  socket.emit("i am a raspi");
 
 
-//###### Messages from remote server (socketIO) to raspi (Flaws server) ########
-//full state request
-socket.on("full state request", function() {
-  console.log("received full state request");
-  request.post(
-    raspi_addr + "fullRequest",
-    function(error, response, body) {
-      if (error) {
-        console.error("Error from raspi", error);
+  //###### Messages from server (socketIO) to raspi (Flaws server) ########
+  //full state request
+  socket.on(eventName="fullRequest", function() {
+    transmitRequest("fullRequest", "");
+  });
+
+  //motion request
+  socket.on(eventName="motionRequest", function(body) {
+    transmitRequest("motionRequest", body);
+  });
+
+  //set timer request
+  socket.on(eventName="timerRequest", function(body) {
+    transmitRequest("timerRequest", body);
+  });
+
+  //generic transmission routine
+  function transmitRequest(eventName, body){
+    console.log("received", eventName, body);
+    request.post(
+      raspi_addr + eventName,
+      {
+        form: { body }
+      },
+      function(error, response, body) {
+        if (error) {
+          console.error("Error from raspi", error);
+        }
+        console.log("Raspi response", response && response.statusCode, body);
       }
-      console.log("Raspi response", response && response.statusCode, body);
-    }
-  );
-});
-
-//motion request
-socket.on("motion request", function(state) {
-  console.log("received motion request: state =", state);
-  request.post(
-    raspi_addr + "motionRequest",
-    {
-      form: { state }
-    },
-    function(error, response, body) {
-      if (error) {
-        console.error("Error from raspi", error);
-      }
-      console.log("Raspi response", response && response.statusCode, body);
-    }
-  );
-});
-
-//set timer request
-socket.on("set timer request", function(req) {
-  console.log("received timer request: ", req);
-  request.post(
-    raspi_addr + "timerRequest",
-    {
-      form: { req }
-    },
-    function(error, response, body) {
-      if (error) {
-        console.error("Error from raspi", error);
-      }
-      console.log("Raspi response", response && response.statusCode, body);
-    }
-  );
+    );
+  }
 });
 
 
 //##### Messages from raspi (Express server) to remote server (socketIO) #######
 //state change
 app.post("/stateChange", function(req, res) {
-  console.log("stateChange info from raspi", req.body);
-  socket.emit("state changed", req.body.new_state);
-  res.send("all good");
+  transmitRequest("stateChange", req, res);
 });
 
 //timer update
 app.post("/timerUpdate", function(req, res) {
-  console.log("timerUpdate from raspi", req.body);
-  socket.emit("timer update", req.body.update);
-  res.send("all good");
+  transmitRequest("timerUpdate", req, res);
 });
+
+function transmitRequest(eventName, req, res){
+  console.log(eventName, "from raspi", req.body);
+  sockets.forEach(function (socket){
+    socket.emit(eventName, req.body.body);
+  });
+  res.send("all good");
+}
 
 
 //######################### Start proxy server #################################

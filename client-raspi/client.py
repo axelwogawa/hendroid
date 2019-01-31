@@ -21,8 +21,13 @@ def start(state_handler, timer_handler, logger):
 
     @app.route("/fullRequest", methods=['POST'])
     def on_full_request():
-        state_handler.update_all_observers()
-        timer_handler.update_all_observers()
+        try:
+            state_handler.update_all_observers()
+            timer_handler.update_all_observers()
+            return ""
+        except Exception as e:
+            logger.exception(str(e))
+            return str(e), 400
 
 
     ################################ motion stuff ##############################
@@ -39,7 +44,7 @@ def start(state_handler, timer_handler, logger):
     def on_state_change(new_state):
         logger.info("client: state change observed: " + new_state)
         r = http.post(proxy + "stateChange", data={
-            "new_state": new_state
+            "body": new_state
         })
         logger.debug("client: proxy response: " + r.text)
 
@@ -85,13 +90,17 @@ def start(state_handler, timer_handler, logger):
         req = request.form.get('req')
         logger.info("client: new timer request: " + str(req))
         req_contents = req.split("-")
-        timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
-        return ""
+        try:
+            timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
+            return ""
+        except Exception as e:
+            logger.exception(str(e))
+            return str(e), 400
 
     def on_timer_change(update):
         logger.info("client: timer change observed: " + update)
         r = http.post(proxy + "timerUpdate", data={
-            "update": update
+            "body": update
         })
         logger.debug("client: proxy response: " + r.text)
 

@@ -1,3 +1,5 @@
+//REMOTE/LOCAL SERVER
+
 const express = require('express')
 const app = express()
 const http = require('http')
@@ -42,14 +44,14 @@ io.on('connection', function connection(socket) {
     }
   })
 
-  socket.on('state changed', function(_state) {
+  socket.on('stateChange', function(_state) {
     console.log(new Date().toLocaleString(),
                   "Emitting state change to ui client:", _state)
     state = _state
     socket.broadcast.emit('state changed', _state)
   })
 
-  socket.on('timer update', function(_update) {
+  socket.on('timerUpdate', function(_update) {
     console.log(new Date().toLocaleString(),
                   "Emitting timer update to ui client:", _update)
     socket.broadcast.emit('timer update', _update)
@@ -61,7 +63,7 @@ io.on('connection', function connection(socket) {
     console.log(new Date().toLocaleString(),
                   "New user is a UI client - updating him (ID:",
                   socket.id, ")")
-    socket.broadcast.emit('full state request')
+    socket.broadcast.emit('fullRequest')
     if(uis.has(socket.id) === false){
       uis.push(socket.id)
     } else {
@@ -72,13 +74,13 @@ io.on('connection', function connection(socket) {
   socket.on('ui motion request', function(_state) {
     console.log(new Date().toLocaleString(), 
                   "Emitting state change request to raspi:", _state)
-    socket.broadcast.emit('motion request', _state)
+    socket.broadcast.emit('motionRequest', _state)
   })
 
   socket.on('ui timer request', function(_request) {
     console.log(new Date().toLocaleString(),
                   "Emitting new timer setting request to raspi:", _request)
-    socket.broadcast.emit('set timer request', _request)
+    socket.broadcast.emit('timerRequest', _request)
   })
 
 
