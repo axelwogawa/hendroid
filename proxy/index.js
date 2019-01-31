@@ -39,7 +39,8 @@ sockets.forEach(function (socket){
 
   //generic transmission routine
   function transmitRequest(eventName, body){
-    console.log("received", eventName, body);
+    console.log(new Date().toLocaleString(),
+                  "received", eventName, body);
     request.post(
       raspi_addr + eventName,
       {
@@ -49,7 +50,8 @@ sockets.forEach(function (socket){
         if (error) {
           console.error("Error from raspi", error);
         }
-        console.log("Raspi response", response && response.statusCode, body);
+        console.log(new Date().toLocaleString(),
+                      "Raspi response", response && response.statusCode, body);
       }
     );
   }
@@ -68,7 +70,7 @@ app.post("/timerUpdate", function(req, res) {
 });
 
 function transmitRequest(eventName, req, res){
-  console.log(eventName, "from raspi", req.body);
+  console.log(new Date().toLocaleString(), eventName, "from raspi", req.body);
   sockets.forEach(function (socket){
     socket.emit(eventName, req.body.body);
   });
@@ -79,5 +81,6 @@ function transmitRequest(eventName, req, res){
 //######################### Start proxy server #################################
 const port = 3031
 app.listen(port, function() {
-  console.log("proxy listening on port", port);
+  console.log(new Date().toLocaleString(),
+                "proxy listening on port", port);
 });
