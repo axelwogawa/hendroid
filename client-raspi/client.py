@@ -33,7 +33,7 @@ def start(state_handler, timer_handler, logger):
     ################################ motion stuff ##############################
     @app.route("/motionRequest", methods=['POST'])
     def on_motion_request():
-        state = request.form.get('state')
+        state = request.form.get('body')
         logger.info("client: new request: {}".format(state))
         try:
             return state_handler.handle_event(state)
@@ -87,7 +87,7 @@ def start(state_handler, timer_handler, logger):
 
     @app.route("/timerRequest", methods=['POST'])
     def on_timer_request():
-        req = request.form.get('req')
+        req = request.form.get('body')
         logger.info("client: new timer request: " + str(req))
         req_contents = req.split("-")
         try:
