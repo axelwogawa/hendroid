@@ -1,0 +1,82 @@
+﻿:sectnums:
+:sectnumlevels: 4
+
+
+= Anforderungen Projekt Huehnerklappe ("HenDroid")
+
+== Grundidee
+Hühnerklappe, die sich über größere Entfernungen (>2km) öffnen lässt.
+
+
+== Abgeleitete Anforderungen
+=== ﻿Must have
+==== Funktionell
+- ‎Vor Ort muss manuelles Öffnen + Schließen der Hühnerklappe möglich sein
+- ‎
+
+==== Konstruktiv
+- wasser- und staubdicht
+- Temperaturbereich: -10 – +30°C
+
+
+=== Nice to have
+==== Funktionell
+- Überwachung des Stall-Innenraumes, sodass bei vollzähliger Besatzung auch das 
+ Schließen automatisch erfolgen kann
+- manuelles Bedienen vor Ort mittels physischer Schalter
+- Statusanzeige
+- ein-/ausschaltbare Beleuchtung
+
+
+== Angestrebte Umsetzung
+=== Mechanik
+==== Hühnerklappe
+. geführtes Blech, das in einer Ebene hochgezogen/heruntergelassen wird
+* Alu? Holz?
+* metallische Führungen (geschmiert? Kugellager? Plastikschiene?)
+* außen angebracht
+* muss in unterer Endlage auf Hühnerleiter aufliegen, um fuchsdicht zu sein
+* *PRO*
+** leicht zu bauen
+** kein Schloss benötigt (unmöglich für Fuchs zu öffnen)
+* *CONTRA*
+** Führung verdreckt leicht -> verhakt sich leicht
+
+. Klappe mit Scharnieren oben
+* *PRO*
+** 
+* *CONTRA*
+** Schloss benötigt 
+
+. Klappe mit Scharnieren seitlich
+* *PRO*
+** 
+* *CONTRA*
+** Schloss benötigt 
+** schließt nicht automatisch durch Eigengewicht -> starre Kraftübertragung
+ benötigt -> kompliziertere Mechanik
+ 
+==== Antrieb
+. direkt angetriebene Seilwinde
+* außen angebracht, Versorgungsleitung durchs Fenster verlegt
+* Getriebemotor (M >= 0,3Nm bzw. m*l >= 3kg*cm)
+* angekuppelte Seiltrommel (Ø ~ 1cm)
+* Gehäuse (abriebfester Öffnung unten, nach oben hin dicht, ordentliche
+ Kabeldurchführung)
+* Seil (Material?, Länge > Klappenhöhe)
+* Kontakte fetten
+* *PRO*
+** einfache Konstruktion
+* *CONTRA*
+** Positionierung festgelegt
+. Seilwinde mit Umlenkrolle
+* *PRO*
+** freie Positionierung
+* *CONTRA*
+**
+. Torsionsfeder im Scharnier
+* *PRO*
+** kein elektrischer Antrieb benötigt 
+* *CONTRA*
+** automatisches Schließen erfordert separaten Antrieb
+** komplizierte Konstruktion
