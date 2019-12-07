@@ -7,12 +7,16 @@ const server = http.createServer(app)
 const io = require('socket.io')(server)
 const List = require("collections/list")
 
+const mqtt = require('mqtt')
+const mqttClient = mqtt.connect('mqtt://localhost', {
+  username: "hendroid",
+  password: "__secret__"
+})
+
 app.use(express.urlencoded())
 app.use(express.static(__dirname + '/static'))
 
 let state = "no_idea"
-let uis = new List()
-let pis = new List()
 /*'/' is the content of the initial GET request of a web browser calling the 
 root directory of a website -> answer by delivering website content*/
 app.get('/', (req, res) => {
@@ -28,53 +32,59 @@ app.get('/state', (req, res) => {
   })
 })
 
+
+mqttClient.on("connect", function () {
+  mqttClient.subscribe("stateChange", function (err) {
+    if (err) console.error(err)
+    console.log("subscribed to stateChange topic")
+  });
+  mqttClient.subscribe("timerUpdate", function (err) {
+    if (err) console.error(err)
+    console.log("subscribed to timerUpdate topic")
+  });
+})
+
+
+mqttClient.on('message', function(topic, message) {
+  message = message.toString()
+  switch (topic) {
+    case "stateChange":
+      console.log(new Date().toLocaleString(),
+                    "Emitting state change to ui client:", message)
+      state = message
+      io.emit('state changed', message)
+
+    case "timerUpdate":
+      console.log(new Date().toLocaleString(),
+                    "Emitting timer update to ui client:", message)
+      io.emit('timer update', message)
+
+    default:
+      console.log(
+        new Date().toLocaleString(), 
+        "received unhandled message in", 
+        topic, 
+        message
+      )
+  }
+})
+
 io.on('connection', function connection(socket) {
   console.log(new Date().toLocaleString(), "A user connected (ID:",
                   socket.id, ")")
-
-
-  /*messages from pi client*/
-  socket.on('i am a raspi', function() {
-    console.log(new Date().toLocaleString(), "New user is a Pi client (ID:",
-                  socket.id, ")")
-    if(pis.has(socket.id) === false){
-      pis.push(socket.id)
-    } else {
-      console.log("Connection was an old one")
-    }
-  })
-
-  socket.on('stateChange', function(_state) {
-    console.log(new Date().toLocaleString(),
-                  "Emitting state change to ui client:", _state)
-    state = _state
-    socket.broadcast.emit('state changed', _state)
-  })
-
-  socket.on('timerUpdate', function(_update) {
-    console.log(new Date().toLocaleString(),
-                  "Emitting timer update to ui client:", _update)
-    socket.broadcast.emit('timer update', _update)
-  })
-
 
   /*requests from UI client*/
   socket.on('ui initial request', function() {
     console.log(new Date().toLocaleString(),
                   "New user is a UI client - updating him (ID:",
                   socket.id, ")")
-    socket.broadcast.emit('fullRequest')
-    if(uis.has(socket.id) === false){
-      uis.push(socket.id)
-    } else {
-      console.log("Connection was an old one")
-    }
+    mqttClient.publish('fullRequest', "pls give info")
   })
 
   socket.on('ui motion request', function(_state) {
     console.log(new Date().toLocaleString(), 
                   "Emitting state change request to raspi:", _state)
-    socket.broadcast.emit('motionRequest', _state)
+    mqttClient.publish('motionRequest', _state)
   })
 
   socket.on('ui timer request', function(_request) {
@@ -84,18 +94,9 @@ io.on('connection', function connection(socket) {
   })
 
 
-  /*general connection events (all types of clients)*/
   socket.on('disconnect', function(reason) {
-    if(uis.delete(socket.id)) {
-      console.log(new Date().toLocaleString(), "UI client disconnected (ID:",
+    console.log(new Date().toLocaleString(), "UI client disconnected (ID:",
                     socket.id, ")")
-    } else if(pis.delete(socket.id)) {
-      console.log(new Date().toLocaleString(),
-                    "PI client disconnected!!!!!111 (ID:", socket.id, ")")
-    } else {
-      console.log(new Date().toLocaleString(), "Old socket disconnected (ID:",
-                    socket.id, ")")
-    }
     console.log("disconnection reason:", reason)
   })
 })
