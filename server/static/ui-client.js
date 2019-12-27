@@ -1,5 +1,11 @@
+/*
+TODO: websocket -> mqtt (enable rollback by abstracting transport function)
+TODO: payload string encoding -> JSON structure
+*/
+
 const socket = io()
 
+//strings for showing actual state in UI
 const state_strs = {
 	opened:       "ist geöffnet"
 	,closed:      "ist geschlossen"
@@ -11,10 +17,28 @@ const state_strs = {
 
 socket.emit("ui initial request")/*request full Pi state after website load/reload*/
 
+/*
+TODO: JSON structure
+*/
 socket.on("state changed", function(state) {
 	document.querySelector("#state").textContent = state_strs[state]
 })
 
+/*
+TODO: JSON structure
+{
+  eventType: "auto",
+  value: "true"
+}
+{
+  eventType: "time",
+  value: {
+    direction: "open",
+    hours: 12,
+    minutes: 0
+  }
+}
+*/
 socket.on('timer update', function(update) {
 	let update_cont = []
 	update_cont = update.split('-')
@@ -42,10 +66,17 @@ socket.on('timer update', function(update) {
 
 })
 
+/*
+TODO: JSON structure
+*/
 function motion_request(state) {
 	socket.emit("ui motion request", state)
 }
 
+/*
+TODO: JSON structure
+like socket.on('timer update', function(update) {}
+*/
 function timer_request(elem, cat, subcat) {
 	if (cat === "auto")
 		socket.emit("ui timer request", cat + "-" + subcat + "-" + elem.checked.toString())

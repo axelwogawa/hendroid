@@ -1,3 +1,10 @@
+'''
+TODO: websocket -> mqtt (enable rollback by abstracting transport function)
+TODO: payload string encoding -> JSON structure
+TODO: remove flask, node.js proxy
+TODO: camera control
+'''
+
 #import event_handler
 #import state_handler
 import camera_handler as cam
