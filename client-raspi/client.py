@@ -49,69 +49,6 @@ def on_message(client, userdata, msg):
     except Exception as e:
         logger.exception(str(e))
 
-def on_full_request(_):
-    try:
-        state_handler.update_all_observers()
-        timer_handler.update_all_observers()
-    except Exception as e:
-        logger.exception(str(e))
-
-def on_motion_request(state):
-    logger.info("client: new request: {}".format(state))
-    try:
-        result = state_handler.handle_event(state)
-        logger.info("motion request: " + result)
-    except Exception as e:
-        logger.exception(str(e))
-
-
-################################ timer stuff ###############################
-#careful, very much python in here!
-def auto_open(val):
-    val = val.lower()
-    if val == "true" or val == "false":
-        timer_handler.auto_open = val == "true"
-def auto_close(val):
-    val = val.lower()
-    if val == "true" or val == "false":
-        timer_handler.auto_close = val == "true"
-def time_open(val):
-    vals = val.split(":")
-    if len(vals) == 2:
-        if vals[0] == "":
-            vals[0] = '0'
-        if vals[1] == "":
-            vals[1] = '0'
-        timer_handler.open_time = time(hour=int(vals[0])
-                                       ,minute=int(vals[1]))
-def time_close(val):
-    vals = val.split(":")
-    if len(vals) == 2:
-        if vals[0] == "":
-            vals[0] = '0'
-        if vals[1] == "":
-            vals[1] = '0'
-        timer_handler.close_time = time(hour=int(vals[0]), minute=int(vals[1]))
-
-timer_actions = {
-    "auto": {
-        "open": auto_open,
-        "close": auto_close
-    },
-    "time": {
-        "open": time_open,
-        "close": time_close
-    }
-}
-
-def on_timer_request(payload):
-    logger.info("client: new timer request: " + payload)
-    req_contents = payload.split("-")
-    try:
-        timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
-    except Exception as e:
-        logger.exception(str(e))
-
 def start(state_handler, timer_handler, logger):
 
     client = mqtt.Client()
@@ -133,11 +70,73 @@ def start(state_handler, timer_handler, logger):
         logger.info("client: timer change observed: " + update)
         client.publish("timerUpdate", update)
 
+    def on_full_request(_):
+        try:
+            state_handler.update_all_observers()
+            timer_handler.update_all_observers()
+        except Exception as e:
+            logger.exception(str(e))
+
+    def on_motion_request(state):
+        logger.info("client: new request: {}".format(state))
+        try:
+            result = state_handler.handle_event(state)
+            logger.info("motion request: " + result)
+        except Exception as e:
+            logger.exception(str(e))
+
+
+    ################################ timer stuff ###############################
+    #careful, very much python in here!
+    def auto_open(val):
+        val = val.lower()
+        if val == "true" or val == "false":
+            timer_handler.auto_open = val == "true"
+    def auto_close(val):
+        val = val.lower()
+        if val == "true" or val == "false":
+            timer_handler.auto_close = val == "true"
+    def time_open(val):
+        vals = val.split(":")
+        if len(vals) == 2:
+            if vals[0] == "":
+                vals[0] = '0'
+            if vals[1] == "":
+                vals[1] = '0'
+            timer_handler.open_time = time(hour=int(vals[0])
+                                           ,minute=int(vals[1]))
+    def time_close(val):
+        vals = val.split(":")
+        if len(vals) == 2:
+            if vals[0] == "":
+                vals[0] = '0'
+            if vals[1] == "":
+                vals[1] = '0'
+            timer_handler.close_time = time(hour=int(vals[0]), minute=int(vals[1]))
+
+    timer_actions = {
+        "auto": {
+            "open": auto_open,
+            "close": auto_close
+        },
+        "time": {
+            "open": time_open,
+            "close": time_close
+        }
+    }
+
+    def on_timer_request(payload):
+        logger.info("client: new timer request: " + payload)
+        req_contents = payload.split("-")
+        try:
+            timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
+        except Exception as e:
+            logger.exception(str(e))
 
     ############################ init routine ##########################
     try:
-        # state_handler.register_observer(on_state_change)
-        # timer_handler.register_observer(on_timer_update)
+        state_handler.register_observer(on_state_change)
+        timer_handler.register_observer(on_timer_update)
 
         client.on_connect = on_connect
         client.on_message = on_message
