@@ -142,6 +142,7 @@ def start(state_handler, timer_handler, logger):
         client.on_connect = on_connect
         client.on_message = on_message
 
+        client.username_pw_set(os.getenv("MQTT_USER"), os.getenv("MQTT_PASSWORD"))
         client.connect(os.getenv("MQTT_HOST"), 1883, 10)
 
         # Blocking call that processes network traffic, dispatches callbacks and
