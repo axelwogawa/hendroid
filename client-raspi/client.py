@@ -18,38 +18,38 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-# The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-
-    client.publish("hello", "It's me")
-
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    client.subscribe("fullRequest")
-    client.subscribe("motionRequest")
-    client.subscribe("timerRequest")
-
-# The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    payload = msg.payload.decode("utf-8")
-    try:
-        print("received message: " + msg.topic + ", payload: " + payload)
-
-        handlers = {
-            "fullRequest": on_full_request,
-            "motionRequest": on_motion_request,
-            "timerRequest": on_timer_request,
-        }
-        handler = handlers.get(msg.topic)
-        if not handler:
-            print("Received unknown message with topic " + msg.topic)
-
-        handler(payload)
-    except Exception as e:
-        logger.exception(str(e))
-
 def start(state_handler, timer_handler, logger):
+    # The callback for when the client receives a CONNACK response from the server.
+    def on_connect(client, userdata, flags, rc):
+        print("Connected with result code "+str(rc))
+
+        client.publish("hello", "It's me")
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe("fullRequest")
+        client.subscribe("motionRequest")
+        client.subscribe("timerRequest")
+
+    # The callback for when a PUBLISH message is received from the server.
+    def on_message(client, userdata, msg):
+        payload = msg.payload.decode("utf-8")
+        try:
+            print("received message: " + msg.topic + ", payload: " + payload)
+
+            handlers = {
+                "fullRequest": on_full_request,
+                "motionRequest": on_motion_request,
+                "timerRequest": on_timer_request,
+            }
+            handler = handlers.get(msg.topic)
+            if not handler:
+                print("Received unknown message with topic " + msg.topic)
+
+            handler(payload)
+        except Exception as e:
+            logger.exception(str(e))
+
 
     client = mqtt.Client()
 
