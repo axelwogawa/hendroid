@@ -7,10 +7,12 @@ const server = http.createServer(app);
 const io = require("socket.io")(server);
 const List = require("collections/list");
 
+require("dotenv").config();
+
 const mqtt = require("mqtt");
-const mqttClient = mqtt.connect("mqtt://localhost", {
-  username: "hendroid",
-  password: "__secret__"
+const mqttClient = mqtt.connect("mqtt://" + process.env.MQTT_HOST, {
+  username: process.env.MQTT_USER,
+  password: process.env.MQTT_PASSWORD
 });
 
 function logWithDate() {
