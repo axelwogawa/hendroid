@@ -1,17 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Main where
 import Data.Char (isPunctuation, isSpace)
 import Data.Monoid (mappend)
 import Data.Text (Text)
+import Data.Text.Lazy.Encoding
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
 import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Network.WebSockets as WS
+import GHC.Generics
+import Data.Aeson
 
 type Client = (Text, WS.Connection)
 type ServerState = [Client]
+
+data MyMsg = MyMsg {
+  eventType :: Text
+, text :: Text
+} deriving (Generic, Show)
 
 newServerState :: ServerState
 newServerState = []
@@ -23,7 +32,8 @@ meow :: WS.Connection -> IO ()
 meow conn = forever $ do
     msg <- WS.receiveData conn
     T.putStrLn ("received " `T.append` msg)
-    WS.sendTextData conn $ msg `T.append` ", meow"
+    --WS.sendTextData conn $ msg `T.append` ", meow"
+    WS.sendTextData conn $ decodeUtf8 $ encode (MyMsg {eventType = "timer update", text = "xxx"})
 
 application state pending = do
     conn <- WS.acceptRequest pending
