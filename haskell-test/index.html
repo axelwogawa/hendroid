@@ -1,0 +1,20 @@
+<html>
+<body>
+  <h1>Websocket Test</h1>
+  <script>
+    const socket = new WebSocket("ws://localhost:9160")
+
+    const id = Math.random()
+
+    socket.onopen = function (event) {
+      setInterval(() => {
+        socket.send(id);
+      }, 2000)
+    };
+
+    socket.onmessage = function (event) {
+      console.log("received", event.data);
+    }
+  </script>
+</body>
+</html>
