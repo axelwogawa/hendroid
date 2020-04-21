@@ -1,10 +1,9 @@
 /*
-TODO: websocket -> mqtt (enable rollback by abstracting transport function)
 TODO: payload string encoding -> JSON structure
 */
-
-const socket = io()
-
+// const socket = io()
+const socket = new WebSocket("ws://localhost:9160")
+const id = Math.random()
 //strings for showing actual state in UI
 const state_strs = {
 	opened:       "ist geöffnet"
@@ -12,18 +11,53 @@ const state_strs = {
 	,opening:     "öffnet sich"
 	,closing:     "schließt sich"
 	,intermediate:"steht halb geöffnet"
-	,no_idea:     "weiß nicht so recht"
+	,no_idea:     "weiß nicht"
+}
+const msgTypeActions = {
+	"timer update": timerUpdate,
+	"state changed": stateChanged
 }
 
-socket.emit("ui initial request")/*request full Pi state after website load/reload*/
+socket.onopen = function (event) {
+	socket.send("ui initial request");
+	setInterval(() => {
+		socket.send(id);
+	}, 2000)
+};
 
+/**
+* message format:
+{
+  type: "message",
+  text: "text",
+  id:   123,
+  date: "28.11.1990"
+}
+*/
+socket.onmessage = function (event) {
+	console.log("received", event.data);
+	if (event.data.eventType && event.data.eventType in msgTypeActions) {
+		msgTypeActions[event.data.eventType](event.data.text);
+	} else {
+		console.log("Unknown message type");
+	}
+}
+
+// socket.emit("ui initial request")/*request full Pi state after website load/reload*/
+
+<<<<<<< HEAD
 /*
 TODO: JSON structure
 */
 socket.on("state changed", function(state) {
+=======
+// socket.on("state changed", function(state) {
+function stateChanged (state) {
+>>>>>>> haskell-test
 	document.querySelector("#state").textContent = state_strs[state]
-})
+}
 
+<<<<<<< HEAD
 /*
 TODO: JSON structure
 {
@@ -40,6 +74,10 @@ TODO: JSON structure
 }
 */
 socket.on('timer update', function(update) {
+=======
+// socket.on('timer update', function (update) {
+function timerUpdate (update) {
+>>>>>>> haskell-test
 	let update_cont = []
 	update_cont = update.split('-')
 	let elems = []
@@ -63,8 +101,7 @@ socket.on('timer update', function(update) {
 		elems[1].value = parseInt(time[1])
 		elems.forEach(set_style_confirmed)
 	}
-
-})
+}
 
 /*
 TODO: JSON structure
