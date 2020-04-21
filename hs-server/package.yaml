@@ -25,6 +25,7 @@ dependencies:
 - aeson
 - websockets
 - net-mqtt
+- network-uri
 
 library:
   source-dirs: src

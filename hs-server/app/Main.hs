@@ -18,6 +18,10 @@ import           Data.Text.Lazy          (toStrict)
 import           Data.Text.Lazy.Encoding (decodeUtf8)
 import           GHC.Generics
 import qualified Network.WebSockets      as WS
+import Network.URI (parseURI)
+import qualified Network.MQTT.Client as MQTT
+import Debug.Trace (trace)
+
 
 {- ########################### Websocket to UI client ##########################
 - websocket stuff taken from https://jaspervdj.be/websockets/example/server.html
@@ -55,15 +59,28 @@ application state pending = do
     WS.sendTextData conn ("Hi client, I'm your server!" :: T.Text)
     talk conn                           -- start waiting forever
 
+connectMqtt = do
+  let (Just uri) = parseURI "mqtt://localhost"
+  mqttClient <- MQTT.connectURI MQTT.mqttConfig{MQTT._msgCB=MQTT.SimpleCallback msgReceived} uri
+
+  print =<< MQTT.subscribe mqttClient [("hello", MQTT.subOptions)] []
+  MQTT.waitForClient mqttClient   -- wait for the the client to disconnect
+
+  return mqttClient
+
+  where
+    msgReceived _ t m p = print (t,m,p)
+
+fullRequest mqttClient = do
+  MQTT.publish mqttClient "fullRequest" "pls give info" False
+
 main :: IO ()
 main = do
     state <- newMVar newServerState
+    mqttClient <- connectMqtt
+    fullRequest mqttClient
     WS.runServer "127.0.0.1" 9160 $ application state
 
 {- ############################ MQTT connection to Pi ##########################
 - logic taken from https://jaspervdj.be/websockets/example/server.html
 -}
-main = do
-  let (Just uri) = parseURI "mqtt://test.mosquitto.org"
-  mc <- connectURI mqttConfig{} uri
-  publish mc "tmp/topic" "hello!" False
