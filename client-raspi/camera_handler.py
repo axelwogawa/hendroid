@@ -19,7 +19,7 @@ Returns:
 
 def take_single_snapshot(path, logger):
   filename = (path + "/" + datetime.strftime(datetime.now(), "%Y_%m_%d-%H:%M:%S")
-              + ".png")
+              + ".jpeg")
   try:
     logger.info("Capturing new image: " + filename)
     with PiCamera() as camera:
@@ -27,7 +27,7 @@ def take_single_snapshot(path, logger):
       # Note: it’s important to sleep for at least two seconds before capturing an
       # image, because this gives the camera’s sensor time to sense the light levels.
       sleep(2)
-      camera.capture(filename)
+      camera.capture(filename, resize=(1920, 1080))
       camera.stop_preview()
   except Exception as e:
     logger.exception("Failed to capture image")
