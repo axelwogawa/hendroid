@@ -1,4 +1,4 @@
-import base64, random, string, math
+import base64, random, string, math, json
 
 ''' Send images via MQTT
 
