@@ -35,7 +35,7 @@ def on_image_request(request):
       image_path = camera_handler.take_single_snapshot(image_dir, logger)
     #elif request == "sequence":
     if image_path:
-      http_image_sender.send("hendroid.zosel.ch/images" image_path, logger)
+      http_image_sender.send("hendroid.zosel.ch/images", image_path, logger)
 
 '''Callback to handle internal state change -> send new state to server'''
 def on_state_change(new_state):
