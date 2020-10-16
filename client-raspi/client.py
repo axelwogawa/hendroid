@@ -13,7 +13,7 @@ from datetime import time #, datetime
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
-import camera_handler, mqtt_image_sender
+import camera_handler, http_image_sender
 
 load_dotenv()
 
