@@ -25,7 +25,7 @@ def send(client, topic, image_path, logger):
     no_of_packets = math.ceil(length/packet_size)
     while start <= len(encoded_image):
       data = {"data": encoded_image[start:end], "pic_id":picId, "pos": pos, "size": no_of_packets}
-      client.publish(topic, json.JSONEncoder().encode(data))
+      client.publish(topic, data)
       end += packet_size
       start += packet_size
       pos = pos +1
