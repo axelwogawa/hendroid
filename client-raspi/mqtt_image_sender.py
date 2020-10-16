@@ -20,7 +20,7 @@ def send(client, topic, image_path, logger):
     end = packet_size
     start = 0
     length = len(encoded_image)
-    picId = ''.join(random.choice(string.lowercase) for i in range(8))
+    picId = ''.join(random.choice(string.ascii_lowercase) for i in range(8))
     pos = 0
     no_of_packets = math.ceil(length/packet_size)
     while start <= len(encoded_image):
