@@ -21,6 +21,9 @@ load_dotenv()
 image_dir = "."
 
 logger = None
+client = None
+state_handler = None
+timer_handler = None
 
 
 ############################### callbacks ################################
@@ -142,8 +145,10 @@ def on_message(client, userdata, msg):
 
 
 ############################ init routine ##########################
-def start(state_handler, timer_handler, logger_):
-    global logger
+def start(state_handler_, timer_handler_, logger_):
+    global state_handler, timer_handler, logger, client
+    state_handler = state_handler_
+    timer_handler = timer_handler_
     logger = logger_
     client = mqtt.Client()
     try:
