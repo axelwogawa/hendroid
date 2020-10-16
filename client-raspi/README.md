@@ -1,7 +1,7 @@
 # Hendroid Raspi Client
 ## System Setup
 - `python 3.5`
--
+- set environment variables: `MQTT_HOST, MQTT_USER, MQTT_PASSWORD` -> HOW THE HELL IS THIS CURRENTLY DONE?!
 
 ## Systemd Service
 - (re-) start service: `sudo systemctl restart hendroid-clientd.service`

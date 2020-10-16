@@ -19,7 +19,7 @@ def send(client, topic, image_path, logger):
     encoded_image = base64.b64encode(image_file.read())
     end = packet_size
     start = 0
-    length = len(encoded)
+    length = len(encoded_image)
     picId = ''.join(random.choice(string.lowercase) for i in range(8))
     pos = 0
     no_of_packets = math.ceil(length/packet_size)
