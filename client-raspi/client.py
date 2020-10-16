@@ -20,10 +20,12 @@ load_dotenv()
 # path to store images at
 image_dir = "."
 
+logger = None
+
 
 ############################### callbacks ################################
 '''Callback to handle image request from server -> take image, send back'''
-def on_image_request(request, logger):
+def on_image_request(request):
     logger.info("client: new image request: " + request)
     image_path = None
     if request == "single":
@@ -134,14 +136,15 @@ def on_message(client, userdata, msg):
         handler = handlers.get(msg.topic)
         if not handler:
             print("Received unknown message with topic " + msg.topic)
-
         handler(payload)
     except Exception as e:
         logger.exception(str(e))
 
 
 ############################ init routine ##########################
-def start(state_handler, timer_handler, logger):
+def start(state_handler, timer_handler, logger_):
+    global logger
+    logger = logger_
     client = mqtt.Client()
     try:
         state_handler.register_observer(on_state_change)
