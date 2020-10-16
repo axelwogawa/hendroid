@@ -2,6 +2,7 @@
 
 from picamera import PiCamera
 from datetime import datetime
+from time import sleep
 
 camera = PiCamera()
 
