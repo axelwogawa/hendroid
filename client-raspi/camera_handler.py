@@ -4,8 +4,6 @@ from picamera import PiCamera
 from datetime import datetime
 from time import sleep
 
-camera = PiCamera()
-
 ''' Capture image via Raspi's camera module and store it on disk
 
 Taken from https://developer.ibm.com/recipes/tutorials/sending-and-receiving-pictures-from-a-raspberry-pi-via-mqtt/
@@ -20,18 +18,19 @@ Returns:
 '''
 
 def take_single_snapshot(path, logger):
-  filename = (path + datetime.strftime(datetime.now(), "%Y_%m_%d-%H:%M:%S")
+  filename = (path + "/" + datetime.strftime(datetime.now(), "%Y_%m_%d-%H:%M:%S")
               + ".png")
   try:
     logger.info("Capturing new image: " + filename)
-    camera.start_preview()
-    sleep(1)
-    camera.capture(filename)
-    camera.stop_preview()
+    with PiCamera() as camera:
+      camera.start_preview()
+      # Note: it’s important to sleep for at least two seconds before capturing an
+      # image, because this gives the camera’s sensor time to sense the light levels.
+      sleep(2)
+      camera.capture(filename)
+      camera.stop_preview()
   except Exception as e:
     logger.exception("Failed to capture image")
     logger.exception(str(e))
     filename = None
-  finally:
-    camera.close()
   return filename
