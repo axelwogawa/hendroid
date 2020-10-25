@@ -13,12 +13,12 @@ from datetime import time #, datetime
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
-import camera_handler, http_image_sender
+import camera_handler, http_file_sender
 
 load_dotenv()
 
 # path to store images at
-image_dir = "."
+image_dir = "./images"
 
 logger = None
 client = None
@@ -35,7 +35,7 @@ def on_image_request(request):
       image_path = camera_handler.take_single_snapshot(image_dir, logger)
     #elif request == "sequence":
     if image_path:
-      http_image_sender.send("https://hendroid.zosel.ch/images", image_path, logger)
+      http_file_sender.send("https://hendroid.zosel.ch/images", image_path, logger)
 
 '''Callback to handle internal state change -> send new state to server'''
 def on_state_change(new_state):
@@ -135,10 +135,10 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     payload = msg.payload.decode("utf-8")
     try:
-        print("received message: " + msg.topic + ", payload: " + payload)
+        logger.info("received message: " + msg.topic + ", payload: " + payload)
         handler = handlers.get(msg.topic)
         if not handler:
-            print("Received unknown message with topic " + msg.topic)
+            logger.info("Received unknown message with topic " + msg.topic)
         handler(payload)
     except Exception as e:
         logger.exception(str(e))
