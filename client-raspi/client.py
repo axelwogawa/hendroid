@@ -1,130 +1,176 @@
-#import event_handler
-#import state_handler
-import camera_handler as cam
-from datetime import datetime, time
-import time as pytime
-from threading import Thread
-from requests.exceptions import ConnectionError
-#from init import app
-from flask import Flask, request
-import requests as http
+'''
+TODO: payload string encoding -> JSON structure
+TODO: camera control
+'''
+import os, logging
+from datetime import time #, datetime
+# import time as pytime
+# from threading import Thread
+# from requests.exceptions import ConnectionError
+# from flask import Flask, request
+# import requests as http
 
-def start(state_handler, timer_handler, logger):
-    proxy = "http://localhost:3031/"
-    app = Flask(__name__)
+import paho.mqtt.client as mqtt
+from dotenv import load_dotenv
 
+import camera_handler, http_file_sender
 
-    ############################### general stuff ##############################
-    @app.route('/')
-    def hello_world():
-        return 'Hello, i\'m our flask server!'
+load_dotenv()
 
-    @app.route("/fullRequest", methods=['POST'])
-    def on_full_request():
-        try:
-            state_handler.update_all_observers()
-            timer_handler.update_all_observers()
-            return ""
-        except Exception as e:
-            logger.exception(str(e))
-            return str(e), 400
+# path to store images at
+image_dir = "./images"
+
+logger = None
+client = None
+state_handler = None
+timer_handler = None
 
 
-    ################################ motion stuff ##############################
-    @app.route("/motionRequest", methods=['POST'])
-    def on_motion_request():
-        state = request.form.get('body')
-        logger.info("client: new request: {}".format(state))
-        try:
-            return state_handler.handle_event(state)
-        except Exception as e:
-            logger.exception(str(e))
-            return str(e), 400
+############################### callbacks ################################
+'''Callback to handle image request from server -> take image, send back'''
+def on_image_request(request):
+    logger.info("client: new image request: " + request)
+    image_path = None
+    if request == "single":
+      image_path = camera_handler.take_single_snapshot(image_dir, logger)
+    #elif request == "sequence":
+    if image_path:
+      http_file_sender.send("https://hendroid.zosel.ch/images", image_path, logger)
 
-    def on_state_change(new_state):
-        logger.info("client: state change observed: " + new_state)
-        r = http.post(proxy + "stateChange", data={
-            "body": new_state
-        })
-        logger.debug("client: proxy response: " + r.text)
+'''Callback to handle internal state change -> send new state to server'''
+def on_state_change(new_state):
+    logger.info("client: state change observed: " + new_state)
+    client.publish("stateChange", new_state)
+
+'''Callback to handle internal timer update -> send new timer parameters to server '''
+def on_timer_update(update):
+    logger.info("client: timer change observed: " + update)
+    client.publish("timerUpdate", update)
+
+'''Callback to handle full request from server -> send current state and timer parameters to server'''
+def on_full_request(_):
+    try:
+        state_handler.update_all_observers()
+        timer_handler.update_all_observers()
+    except Exception as e:
+        logger.exception(str(e))
+
+'''Callback to handle motion request from server -> swtich motion state'''
+def on_motion_request(state):
+    logger.info("client: new request: {}".format(state))
+    try:
+        result = state_handler.handle_event(state)
+        logger.info("motion request: " + result)
+    except Exception as e:
+        logger.exception(str(e))
+
+#careful, very much python in here!
+def auto_open(val):
+    val = val.lower()
+    if val == "true" or val == "false":
+        timer_handler.auto_open = val == "true"
+def auto_close(val):
+    val = val.lower()
+    if val == "true" or val == "false":
+        timer_handler.auto_close = val == "true"
+def time_open(val):
+    vals = val.split(":")
+    if len(vals) == 2:
+        if vals[0] == "":
+            vals[0] = '0'
+        if vals[1] == "":
+            vals[1] = '0'
+        timer_handler.open_time = time(hour=int(vals[0])
+                                       ,minute=int(vals[1]))
+def time_close(val):
+    vals = val.split(":")
+    if len(vals) == 2:
+        if vals[0] == "":
+            vals[0] = '0'
+        if vals[1] == "":
+            vals[1] = '0'
+        timer_handler.close_time = time(hour=int(vals[0]), minute=int(vals[1]))
+
+timer_actions = {
+    "auto": {
+        "open": auto_open,
+        "close": auto_close
+    },
+    "time": {
+        "open": time_open,
+        "close": time_close
+    }
+}
+
+'''Callback to handle timer update request from server -> set new timer parameters'''
+def on_timer_request(payload):
+    logger.info("client: new timer request: " + payload)
+    req_contents = payload.split("-")
+    try:
+        timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
+    except Exception as e:
+        logger.exception(str(e))
+
+# dictionary: mqtt topic -> callback
+handlers = {
+  "fullRequest": on_full_request,
+  "motionRequest": on_motion_request,
+  "timerRequest": on_timer_request,
+  "imageRequest": on_image_request,
+}
+
+'''The callback for when the client receives a CONNACK response from the server.'''
+def on_connect(client, userdata, flags, rc):
+    logger.info("Connected with result code "+str(rc))
+
+    client.publish("hello", "It's me")
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    for topic in handlers:
+      logger.info("Subscribing to MQTT topic: " + topic)
+      client.subscribe(topic)
+
+'''The callback for when a PUBLISH message is received from the server.'''
+def on_message(client, userdata, msg):
+    payload = msg.payload.decode("utf-8")
+    try:
+        logger.info("received message: " + msg.topic + ", payload: " + payload)
+        handler = handlers.get(msg.topic)
+        if not handler:
+            logger.info("Received unknown message with topic " + msg.topic)
+        handler(payload)
+    except Exception as e:
+        logger.exception(str(e))
 
 
-    ################################ timer stuff ###############################
-    #careful, very much python in here!
-    def auto_open(val):
-        val = val.lower()
-        if val == "true" or val == "false":
-            timer_handler.auto_open = val == "true"
-    def auto_close(val):
-        val = val.lower()
-        if val == "true" or val == "false":
-            timer_handler.auto_close = val == "true"
-    def time_open(val):
-        vals = val.split(":")
-        if len(vals) == 2:
-            if vals[0] == "":
-                vals[0] = '0'
-            if vals[1] == "":
-                vals[1] = '0'
-            timer_handler.open_time = time(hour=int(vals[0])
-                                           ,minute=int(vals[1]))
-    def time_close(val):
-        vals = val.split(":")
-        if len(vals) == 2:
-            if vals[0] == "":
-                vals[0] = '0'
-            if vals[1] == "":
-                vals[1] = '0'
-            timer_handler.close_time = time(hour=int(vals[0])
-                                        ,minute=int(vals[1]))
-    timer_actions = {"auto": {"open": auto_open
-                              ,"close": auto_close
-                              }
-                     ,"time": {"open": time_open
-                               ,"close": time_close
-                               }
-                     }
-
-    @app.route("/timerRequest", methods=['POST'])
-    def on_timer_request():
-        req = request.form.get('body')
-        logger.info("client: new timer request: " + str(req))
-        req_contents = req.split("-")
-        try:
-            timer_actions[req_contents[0]][req_contents[1]](req_contents[2])
-            return ""
-        except Exception as e:
-            logger.exception(str(e))
-            return str(e), 400
-
-    def on_timer_change(update):
-        logger.info("client: timer change observed: " + update)
-        r = http.post(proxy + "timerUpdate", data={
-            "body": update
-        })
-        logger.debug("client: proxy response: " + r.text)
-
-
-    ############################### image stuff ################################
-    def on_image_request(request):
-        logger.info("client: new image request: " + request)
-        images = []
-        if request == "single":
-          images = [cam.take_single_snapshot(path)]
-        #elif request == "sequence":
-
-
-    ############################ init routine ##########################
+############################ init routine ##########################
+def start(state_handler_, timer_handler_, logger_):
+    global state_handler, timer_handler, logger, client
+    state_handler = state_handler_
+    timer_handler = timer_handler_
+    logger = logger_
+    client = mqtt.Client()
     try:
         state_handler.register_observer(on_state_change)
-        timer_handler.register_observer(on_timer_change)
+        timer_handler.register_observer(on_timer_update)
 
-        # socketIO.on('motion request', on_motion_request)
-        # socketIO.on('set timer request', on_timer_request)
-        # socketIO.on('full state request', on_full_request)
-        # socketIO.on('disconnect', on_disconnect)
-        
-        app.run()
+        client.on_connect = on_connect
+        client.on_message = on_message
+
+        client.username_pw_set(os.getenv("MQTT_USER"), os.getenv("MQTT_PASSWORD"))
+        client.connect(os.getenv("MQTT_HOST"), 1883, 10)
+
+        # Blocking call that processes network traffic, dispatches callbacks and
+        # handles reconnecting.
+        # Other loop*() functions are available that give a threaded interface and a
+        # manual interface.
+        client.loop_forever()
+
     except Exception as e:
         logger.exception(str(e))
         raise
+
+if __name__ == '__main__':
+    logger = logging.getLogger("hendroid client stub")
+    start(None, None, logger)

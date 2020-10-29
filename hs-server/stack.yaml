@@ -1,0 +1,6 @@
+packages:
+- .
+resolver: lts-15.9
+allow-newer: true
+extra-deps:
+- net-mqtt-0.6.2.3

@@ -1,105 +1,126 @@
-//REMOTE/LOCAL SERVER
+// REMOTE/LOCAL SERVER
 
-const express = require('express')
-const app = express()
-const http = require('http')
-const server = http.createServer(app)
-const io = require('socket.io')(server)
-const List = require("collections/list")
+const imageDir = './images/'
 
-app.use(express.urlencoded())
-app.use(express.static(__dirname + '/static'))
+const express = require('express');
+const http = require('http');
+// const List = require('collections/list');
+var path = require('path');
+require('dotenv').config();
 
-let state = "no_idea"
-let uis = new List()
-let pis = new List()
-/*'/' is the content of the initial GET request of a web browser calling the 
-root directory of a website -> answer by delivering website content*/
+var multer = require('multer');
+var upload = multer({ dest: imageDir });
+const app = express();
+const server = http.createServer(app);
+const io = require('socket.io')(server);
+// app.use(upload);
+app.use(express.static(imageDir));
+
+
+const mqtt = require('mqtt');
+const mqttClient = mqtt.connect('mqtt://' + process.env.MQTT_HOST, {
+  username: process.env.MQTT_USER,
+  password: process.env.MQTT_PASSWORD
+});
+
+function logWithDate () {
+  console.log(new Date().toLocaleString(), ...arguments);
+}
+
+app.use(express.urlencoded());
+app.use(express.static(path.join(__dirname, 'static')));
+
+let state = 'no_idea';
+/* '/' is the content of the initial GET request of a web browser calling the
+root directory of a website -> answer by delivering website content */
 app.get('/', (req, res) => {
-	res.sendFile('static/index.html', {root: __dirname });
-})
+  res.sendFile('static/index.html', { root: __dirname });
+});
 
-app.post('/', (req, res) => {
-})
-
+// state request
 app.get('/state', (req, res) => {
   res.send({
     state
-  })
-})
+  });
+});
 
-io.on('connection', function connection(socket) {
-  console.log(new Date().toLocaleString(), "A user connected (ID:",
-                  socket.id, ")")
+// dummy -> ignore post request to root url
+app.post('/', (req, res) => {});
 
+// posting images
+app.post('/images', upload.single('file'), (req, res) => {
+  // todo: ignore image, if not expecting one
+  logWithDate('Received new image:', req);
+  io.emit('image', req.file.filename);
+  res.send('Received image');
+});
 
-  /*messages from pi client*/
-  socket.on('i am a raspi', function() {
-    console.log(new Date().toLocaleString(), "New user is a Pi client (ID:",
-                  socket.id, ")")
-    if(pis.has(socket.id) === false){
-      pis.push(socket.id)
-    } else {
-      console.log("Connection was an old one")
-    }
-  })
+function subscription (topic) {
+  return err => {
+    if (err) console.error(err);
+    console.log(`subscribed to ${topic} topic`);
+  };
+}
 
-  socket.on('stateChange', function(_state) {
-    console.log(new Date().toLocaleString(),
-                  "Emitting state change to ui client:", _state)
-    state = _state
-    socket.broadcast.emit('state changed', _state)
-  })
+mqttClient.on('connect', function () {
+  mqttClient.subscribe('stateChange', subscription('stateChange'));
+  mqttClient.subscribe('timerUpdate', subscription('timerUpdate'));
+  mqttClient.subscribe('hello', subscription('hello'));
+});
 
-  socket.on('timerUpdate', function(_update) {
-    console.log(new Date().toLocaleString(),
-                  "Emitting timer update to ui client:", _update)
-    socket.broadcast.emit('timer update', _update)
-  })
+mqttClient.on('message', function (topic, message) {
+  message = message.toString();
 
+  const handlers = {
+    stateChange: message => {
+      logWithDate('Emitting state change to ui client:', message);
+      state = message;
+      io.emit('state changed', message);
+    },
+    timerUpdate: message => {
+      logWithDate('Emitting timer update to ui client:', message);
+      io.emit('timer update', message);
+    },
+    hello: message => {
+      logWithDate("Received 'hello' message", message);
+    },
+  };
 
-  /*requests from UI client*/
-  socket.on('ui initial request', function() {
-    console.log(new Date().toLocaleString(),
-                  "New user is a UI client - updating him (ID:",
-                  socket.id, ")")
-    socket.broadcast.emit('fullRequest')
-    if(uis.has(socket.id) === false){
-      uis.push(socket.id)
-    } else {
-      console.log("Connection was an old one")
-    }
-  })
+  handlers[topic]
+    ? handlers[topic](message)
+    : logWithDate('received unhandled message in', topic, message);
+});
 
-  socket.on('ui motion request', function(_state) {
-    console.log(new Date().toLocaleString(), 
-                  "Emitting state change request to raspi:", _state)
-    socket.broadcast.emit('motionRequest', _state)
-  })
+io.on('connection', function connection (socket) {
+  logWithDate('A user connected (ID:', socket.id, ')');
 
-  socket.on('ui timer request', function(_request) {
-    console.log(new Date().toLocaleString(),
-                  "Emitting new timer setting request to raspi:", _request)
-    socket.broadcast.emit('timerRequest', _request)
-  })
+  /* requests from UI client */
+  socket.on('ui initial request', function () {
+    logWithDate('New user is a UI client - updating him (ID:', socket.id, ')');
+    mqttClient.publish('fullRequest', 'pls give info');
+  });
 
+  socket.on('ui_image_request', function () {
+    logWithDate('Emitting single image request to raspi');
+    mqttClient.publish('imageRequest', 'single');
+  });
 
-  /*general connection events (all types of clients)*/
-  socket.on('disconnect', function(reason) {
-    if(uis.delete(socket.id)) {
-      console.log(new Date().toLocaleString(), "UI client disconnected (ID:",
-                    socket.id, ")")
-    } else if(pis.delete(socket.id)) {
-      console.log(new Date().toLocaleString(),
-                    "PI client disconnected!!!!!111 (ID:", socket.id, ")")
-    } else {
-      console.log(new Date().toLocaleString(), "Old socket disconnected (ID:",
-                    socket.id, ")")
-    }
-    console.log("disconnection reason:", reason)
-  })
-})
+  socket.on('ui motion request', function (_state) {
+    logWithDate('Emitting state change request to raspi:', _state);
+    mqttClient.publish('motionRequest', _state);
+  });
 
-server.listen(3030, function() {
-  console.log(new Date().toLocaleString(), "listening on *:3030")
-})
+  socket.on('ui timer request', function (_request) {
+    logWithDate('Emitting new timer setting request to raspi:', _request);
+    mqttClient.publish('timerRequest', _request);
+  });
+
+  socket.on('disconnect', function (reason) {
+    logWithDate('UI client disconnected (ID:', socket.id, ')');
+    console.log('disconnection reason:', reason);
+  });
+});
+
+server.listen(3030, function () {
+  logWithDate('listening on *:3030');
+});

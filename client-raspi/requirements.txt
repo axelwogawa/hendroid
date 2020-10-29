@@ -1,2 +1,5 @@
 requests
 flask
+paho-mqtt
+python-dotenv
+picamera
